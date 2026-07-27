@@ -1,0 +1,6 @@
+name: Atmo
+version: '0.1'
+main: fr.omijica.atmo.Atmo
+api-version: '1.20'
+authors: [ omijica ]
+website: omijica.fr
