@@ -6,12 +6,15 @@ public final class Atmo extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        if (getCommand("atmo") != null) {
+            getCommand("atmo").setExecutor(new AtmoCommand());
+        }
 
+        getLogger().info("AtmoPlugin enabled !");
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        getLogger().info("AtmoPlugin disabled !");
     }
 }
