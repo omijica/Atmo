@@ -10,7 +10,7 @@ public final class Atmo extends JavaPlugin {
             getCommand("atmo").setExecutor(new AtmoCommand());
         }
 
-        getServer().getPluginManager().registerEvents(new MenuListener(), this);
+        getServer().getPluginManager().registerEvents(new MenuListener(this), this);
 
         getLogger().info("AtmoPlugin enabled !");
     }

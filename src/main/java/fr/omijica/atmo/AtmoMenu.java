@@ -5,13 +5,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import net.wesjd.anvilgui.AnvilGUI;
 
+import java.util.Collections;
 import java.util.List;
 
 public class AtmoMenu {
@@ -40,7 +40,7 @@ public class AtmoMenu {
 
             tripwireItem.setItemMeta(tripwireMeta);
         }
-        gui.setItem(10, tripwireItem);
+        gui.setItem(12, tripwireItem);
 
         //PAPER
         ItemStack paperItem = new ItemStack(Material.PAPER);
@@ -51,20 +51,33 @@ public class AtmoMenu {
 
             paperItem.setItemMeta(paperMeta);
         }
-        gui.setItem(13, paperItem);
-
-        //DISC
-        ItemStack discItem = new ItemStack(Material.MUSIC_DISC_STAL);
-        ItemMeta discMeta = discItem.getItemMeta();
-        if (discMeta != null) {
-            discMeta.displayName(Component.text("List of music.", NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
-            discMeta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
-            discMeta.lore(List.of(Component.text("Click here.", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
-
-            discItem.setItemMeta(discMeta);
-        }
-        gui.setItem(16, discItem);
+        gui.setItem(14, paperItem);
 
         player.openInventory(gui);
+    }
+
+    public static void openAnvilMenu(Atmo plugin, Player player) {
+        new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+
+                if (slot != AnvilGUI.Slot.OUTPUT) {
+                    return Collections.emptyList();
+                }
+
+                String zoneName = stateSnapshot.getText();
+
+                if (zoneName == null || zoneName.isBlank() || zoneName.equals("Area Name")) {
+                    player.sendMessage(Component.text("Please enter a valid zone name.", NamedTextColor.RED));
+                    return List.of(AnvilGUI.ResponseAction.replaceInputText("Area Name"));
+                }
+
+                player.sendMessage(Component.text("Zone \"" + zoneName + "\" successfully created!", NamedTextColor.GREEN));
+                // saveZone(player, zoneName);
+                return List.of(AnvilGUI.ResponseAction.close());
+        })
+        .title("Enter area's name.")
+        .text("Area Name")
+        .itemLeft(new ItemStack(Material.NAME_TAG))
+        .plugin(plugin)
+        .open(player);
     }
 }
