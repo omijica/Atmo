@@ -4,21 +4,22 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.entity.Player;
 
 public class AtmoCommand implements CommandExecutor {
 
     MiniMessage mm = MiniMessage.miniMessage(); //couleur
 
     @Override
-    public boolean onCommand(CommandSender player, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!player.hasPermission("atmo.use")) {
-            player.sendMessage(mm.deserialize("<red>You do not have permission to use this command."));
+        if (!sender.hasPermission("atmo.use")) {
+            sender.sendMessage(mm.deserialize("<red>You do not have permission to use this command."));
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage(mm.deserialize("<red>Usage: /atmo"));
+            sender.sendMessage(mm.deserialize("<red>Usage: /atmo"));
             return true;
         }
 
@@ -26,11 +27,17 @@ public class AtmoCommand implements CommandExecutor {
 
         switch (arg1) {
 
-            case "reload":
+            case "menu":
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(mm.deserialize("<red>Only a player can open the menu."));
+                    return true;
+                }
+
+                AtmoMenu.openMenu(player);
                 break;
 
             default:
-                player.sendMessage(mm.deserialize("<red>Usage: /atmo"));
+                sender.sendMessage(mm.deserialize("<red>Usage: /atmo"));
                 break;
 
         }
