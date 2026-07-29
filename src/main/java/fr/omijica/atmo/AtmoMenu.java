@@ -71,7 +71,8 @@ public class AtmoMenu {
                 }
 
                 player.sendMessage(Component.text("Zone \"" + zoneName + "\" successfully created!", NamedTextColor.GREEN));
-                // saveZone(player, zoneName);
+                ZoneListener zListener = plugin.getZoneListener();
+                zListener.enableCreationMode(player, zoneName);
                 return List.of(AnvilGUI.ResponseAction.close());
         })
         .title("Enter area's name.")
