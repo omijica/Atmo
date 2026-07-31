@@ -32,5 +32,9 @@ public class MenuListener implements Listener {
         if (event.getSlot() == 12) {
             AtmoMenu.openAnvilMenu(plugin, player);
         }
+
+        else if (event.getSlot() == 14) {
+            AtmoMenu.openPaperMenu(player);
+        }
     }
 }
