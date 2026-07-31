@@ -93,7 +93,7 @@ public class ZoneListener implements Listener {
         }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-        String zonePath = "area." + session.getZoneName();
+        String zonePath = "areas." + session.getZoneName();
 
         String path = zonePath + ".";
         Location p1 = session.getPos1();
@@ -108,14 +108,10 @@ public class ZoneListener implements Listener {
         config.set(path + "pos2.y", p2.getBlockY());
         config.set(path + "pos2.z", p2.getBlockZ());
 
+        config.set(path + "priority", 1);
+
         config.set(path + "music.enabled", false);
         config.set(path + "music.name", "");
-
-        config.set(path + "ambient.enabled", false);
-        config.set(path + "ambient.name", "");
-
-        config.set(path + "blockSound.enabled", false);
-        config.set(path + "blockSound.name", "");
 
         try {
             config.save(file);

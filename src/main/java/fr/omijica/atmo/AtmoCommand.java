@@ -15,9 +15,11 @@ public class AtmoCommand implements CommandExecutor {
     MiniMessage mm = MiniMessage.miniMessage(); //couleur
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
     private final Atmo plugin;
+    private final ZoneChecker zoneChecker;
 
-    public AtmoCommand(Atmo plugin) {
+    public AtmoCommand(Atmo plugin, ZoneChecker zoneChecker) {
         this.plugin = plugin;
+        this.zoneChecker = zoneChecker; 
     }
 
     @Override
@@ -60,6 +62,21 @@ public class AtmoCommand implements CommandExecutor {
                 }
                 else {
                     AtmoMenu.openAnvilMenu(plugin, player);
+                }
+                break;
+
+            case "info":
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(mm.deserialize("<red>Only a player can run this command."));
+                    return true;
+                }
+
+                ZoneClass zone = zoneChecker.getPlayerZone(player);
+                if (zone == null) {
+                    player.sendMessage(mm.deserialize("<red>You are not in any zone."));
+                }
+                else {
+                    player.sendMessage(mm.deserialize("<red>You are in the area:<white> " + zone.getName() + " <gray>(Depending on the priority)"));
                 }
                 break;
 
