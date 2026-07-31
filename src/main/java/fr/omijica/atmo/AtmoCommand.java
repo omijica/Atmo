@@ -80,6 +80,16 @@ public class AtmoCommand implements CommandExecutor {
                 }
                 break;
 
+            case "reload":
+                if (!sender.hasPermission("atmo.reload")) {
+                    sender.sendMessage(mm.deserialize("<red>You do not have permission to use this command."));
+                    return true;
+                }
+
+                zoneChecker.loadZones(plugin.getDataFolder());
+                sender.sendMessage(mm.deserialize("<green>Atmo configuration and zones reloaded successfully!"));
+                break;
+
             default:
                 sender.sendMessage(mm.deserialize("<red>Usage: /atmo"));
                 break;
