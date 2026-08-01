@@ -17,10 +17,7 @@ import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.profile.PlayerTextures;
 
 import java.net.URI;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class AtmoMenu {
 
@@ -64,74 +61,6 @@ public class AtmoMenu {
         player.openInventory(gui);
     }
 
-    public static void openPaperMenu(Player player) {
-        Component title = Component.text("Atmo Menu", NamedTextColor.GOLD, TextDecoration.BOLD);
-        Inventory gui = Bukkit.createInventory(null, 54, title);
-
-        String base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGU0MDNjYzdiYmFjNzM2NzBiZDU0M2Y2YjA5NTViYWU3YjhlOTEyM2Q4M2JkNzYwZjYyMDRjNWFmZDhiZTdlMSJ9fX0=";
-        ItemStack rightItem = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta rightMeta = (SkullMeta) rightItem.getItemMeta();
-
-        if (rightMeta != null) {
-            try {
-                String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
-                String url = decodedJson.split("\"url\":\"")[1].split("\"")[0];
-                PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-                PlayerTextures textures = profile.getTextures();
-                textures.setSkin(URI.create(url).toURL());
-                profile.setTextures(textures);
-                rightMeta.setOwnerProfile(profile);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            rightMeta.displayName(Component.text("Right", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
-            rightMeta.lore(List.of(Component.text("Click here", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
-
-            rightItem.setItemMeta(rightMeta);
-
-        }
-
-        gui.setItem(50, rightItem); //45
-
-        base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTMzYWQ1YzIyZGIxNjQzNWRhYWQ2MTU5MGFiYTUxZDkzNzkxNDJkZDU1NmQ2YzQyMmE3MTEwY2EzYWJlYTUwIn19fQ==";
-        ItemStack leftItem = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta leftMeta = (SkullMeta) leftItem.getItemMeta();
-
-        if (leftMeta != null) {
-            try {
-                String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
-                String url = decodedJson.split("\"url\":\"")[1].split("\"")[0];
-                PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-                PlayerTextures textures = profile.getTextures();
-                textures.setSkin(URI.create(url).toURL());
-                profile.setTextures(textures);
-                leftMeta.setOwnerProfile(profile);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            leftMeta.displayName(Component.text("Left", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
-            leftMeta.lore(List.of(Component.text("Click here", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
-
-            leftItem.setItemMeta(leftMeta);
-
-        }
-
-        gui.setItem(48, leftItem); //45
-
-        ItemStack barrierItem = new ItemStack(Material.BARRIER);
-        ItemMeta barrierMeta = barrierItem.getItemMeta();
-        if (barrierMeta != null) {
-            barrierMeta.displayName(Component.text(" "));
-            barrierItem.setItemMeta(barrierMeta);
-        }
-        gui.setItem(48, barrierItem);
-
-        player.openInventory(gui);
-
-    }
-
     public static void openAnvilMenu(Atmo plugin, Player player) {
         new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 
@@ -156,5 +85,139 @@ public class AtmoMenu {
         .itemLeft(new ItemStack(Material.NAME_TAG))
         .plugin(plugin)
         .open(player);
+    }
+
+    /* MENU LIST AREAS */
+
+    private final ZoneChecker zoneChecker;
+    private static final int PAGE_SLOTS = 45; // slots 0 à 44
+    private static final int PREVIOUS = 48; // "Left"
+    private static final int NEXT   = 50; // "Right"
+    private final Map<UUID, Integer> playerPage = new HashMap<>();
+
+    AtmoMenu(ZoneChecker zoneChecker) {
+        this.zoneChecker = zoneChecker;
+    }
+
+    public Map<UUID, Integer> getPlayerPage() {
+        return playerPage;
+    }
+
+    public void openPaperMenu(Player player, int page) {
+        Component title = Component.text("Atmo Menu (AREAS)", NamedTextColor.GOLD, TextDecoration.BOLD);
+        Inventory gui = Bukkit.createInventory(null, 54, title);
+
+        /* RIGHT ITEM */
+        String base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGU0MDNjYzdiYmFjNzM2NzBiZDU0M2Y2YjA5NTViYWU3YjhlOTEyM2Q4M2JkNzYwZjYyMDRjNWFmZDhiZTdlMSJ9fX0=";
+        ItemStack rightItem = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta rightMeta = (SkullMeta) rightItem.getItemMeta();
+
+        if (rightMeta != null) {
+            try {
+                String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
+                String url = decodedJson.split("\"url\":\"")[1].split("\"")[0];
+                PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+                PlayerTextures textures = profile.getTextures();
+                textures.setSkin(URI.create(url).toURL());
+                profile.setTextures(textures);
+                rightMeta.setOwnerProfile(profile);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            rightMeta.displayName(Component.text("Right", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            rightMeta.lore(List.of(Component.text("Click here", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
+
+            rightItem.setItemMeta(rightMeta);
+
+        }
+
+        /* LEFT ITEM */
+        base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTMzYWQ1YzIyZGIxNjQzNWRhYWQ2MTU5MGFiYTUxZDkzNzkxNDJkZDU1NmQ2YzQyMmE3MTEwY2EzYWJlYTUwIn19fQ==";
+        ItemStack leftItem = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta leftMeta = (SkullMeta) leftItem.getItemMeta();
+
+        if (leftMeta != null) {
+            try {
+                String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
+                String url = decodedJson.split("\"url\":\"")[1].split("\"")[0];
+                PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+                PlayerTextures textures = profile.getTextures();
+                textures.setSkin(URI.create(url).toURL());
+                profile.setTextures(textures);
+                leftMeta.setOwnerProfile(profile);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            leftMeta.displayName(Component.text("Left", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            leftMeta.lore(List.of(Component.text("Click here", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
+
+            leftItem.setItemMeta(leftMeta);
+
+        }
+
+        /* BARRIER ITEM */
+
+        ItemStack barrierItem = new ItemStack(Material.BARRIER);
+        ItemMeta barrierMeta = barrierItem.getItemMeta();
+        if (barrierMeta != null) {
+            barrierMeta.displayName(Component.text(""));
+            barrierItem.setItemMeta(barrierMeta);
+        }
+
+        /* CODE MENU */
+        List<ZoneClass> zones = zoneChecker.getZones();
+        int totalPages = Math.max(1, (int) Math.ceil((double) zones.size() / PAGE_SLOTS));
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
+        int debut = page * PAGE_SLOTS;
+        int fin = Math.min(debut + PAGE_SLOTS, zones.size());
+
+        int slot = 0;
+        for (int i = debut; i < fin; i++) {
+            gui.setItem(slot, createZoneItem(zones.get(i)));
+            slot++;
+        }
+
+        if (page > 0) {
+            gui.setItem(PREVIOUS, leftItem);
+        } else {
+            gui.setItem(PREVIOUS, barrierItem);
+        }
+
+        if (page < totalPages - 1) {
+            gui.setItem(NEXT, rightItem);
+        } else {
+            gui.setItem(NEXT, barrierItem);
+        }
+
+        player.openInventory(gui);
+
+        playerPage.put(player.getUniqueId(), page);
+    }
+
+    private ItemStack createZoneItem(ZoneClass zone) {
+        ItemStack item = new ItemStack(Material.MAP);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.displayName(Component.text(zone.getName(), NamedTextColor.GOLD, TextDecoration.BOLD).decoration(TextDecoration.ITALIC, false));
+
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("World: " + zone.getWorld(), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("Pos1: " + fmt(zone.getX1(), zone.getY1(), zone.getZ1()), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("Pos2: " + fmt(zone.getX2(), zone.getY2(), zone.getZ2()), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("Priority: " + zone.getPriority(), NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+
+            meta.lore(lore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
+
+    private String fmt(double x, double y, double z) {
+        return String.format("%.1f, %.1f, %.1f", x, y, z);
     }
 }

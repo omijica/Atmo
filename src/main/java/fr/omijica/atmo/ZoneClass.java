@@ -36,6 +36,14 @@ public class ZoneClass {
 
     public String getName() { return name; }
     public int getPriority() { return priority; }
+    public String getWorld() { return world; }
+    public double getX1() { return minX; }
+    public double getY1() { return minY; }
+    public double getZ1() { return minZ; }
+    public double getX2() { return maxX; }
+    public double getY2() { return maxY; }
+    public double getZ2() { return maxZ; }
 }
+
 
 

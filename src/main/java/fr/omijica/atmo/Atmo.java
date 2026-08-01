@@ -12,6 +12,7 @@ public final class Atmo extends JavaPlugin {
 
     private ZoneListener zoneListener;
     private ZoneChecker zoneChecker;
+    private AtmoMenu atmoMenu;
 
     @Override
     public void onEnable() {
@@ -51,12 +52,13 @@ public final class Atmo extends JavaPlugin {
 
         this.zoneListener = new ZoneListener(this);
         this.zoneChecker = new ZoneChecker();
+        this.atmoMenu = new AtmoMenu(this.zoneChecker);
 
         if (getCommand("atmo") != null) {
             getCommand("atmo").setExecutor(new AtmoCommand(this, this.zoneChecker));
         }
 
-        getServer().getPluginManager().registerEvents(new MenuListener(this), this);
+        getServer().getPluginManager().registerEvents(new MenuListener(this, this.atmoMenu), this);
         getServer().getPluginManager().registerEvents(this.zoneListener, this);
 
         zoneChecker.loadZones(getDataFolder());
@@ -83,4 +85,9 @@ public final class Atmo extends JavaPlugin {
     public ZoneListener getZoneListener() {
         return this.zoneListener;
     }
+
+    public AtmoMenu getAtmoMenu() {
+        return this.atmoMenu;
+    }
+
 }
