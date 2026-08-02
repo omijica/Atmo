@@ -21,10 +21,12 @@ public class ZoneListener implements Listener {
     MiniMessage mm = MiniMessage.miniMessage();
 
     private final Atmo plugin;
+    private final ZoneChecker zoneChecker;
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
 
-    public ZoneListener(Atmo plugin) {
+    public ZoneListener(Atmo plugin, ZoneChecker zoneChecker) {
         this.plugin = plugin;
+        this.zoneChecker = zoneChecker;
     }
 
     public void enableCreationMode(Player player, String zoneName) {
@@ -119,5 +121,7 @@ public class ZoneListener implements Listener {
             plugin.getLogger().severe("Unable to save the zone to area.yml!");
             e.printStackTrace();
         }
+
+        zoneChecker.loadZones(plugin.getDataFolder());
     }
 }

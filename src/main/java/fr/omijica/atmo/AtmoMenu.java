@@ -91,8 +91,8 @@ public class AtmoMenu {
 
     private final ZoneChecker zoneChecker;
     private static final int PAGE_SLOTS = 45; // slots 0 à 44
-    private static final int PREVIOUS = 48; // "Left"
-    private static final int NEXT   = 50; // "Right"
+    private static final int PREVIOUS = 52; // "Left"
+    private static final int NEXT   = 53; // "Right"
     private final Map<UUID, Integer> playerPage = new HashMap<>();
 
     AtmoMenu(ZoneChecker zoneChecker) {
@@ -111,6 +111,17 @@ public class AtmoMenu {
         String base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGU0MDNjYzdiYmFjNzM2NzBiZDU0M2Y2YjA5NTViYWU3YjhlOTEyM2Q4M2JkNzYwZjYyMDRjNWFmZDhiZTdlMSJ9fX0=";
         ItemStack rightItem = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta rightMeta = (SkullMeta) rightItem.getItemMeta();
+
+        ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glassFiller.getItemMeta();
+        if (glassMeta != null) {
+            glassMeta.displayName(Component.empty());
+            glassFiller.setItemMeta(glassMeta);
+        }
+
+        for (int i=45; i < gui.getSize(); i++) {
+            gui.setItem(i,glassFiller);
+        }
 
         if (rightMeta != null) {
             try {
@@ -219,5 +230,62 @@ public class AtmoMenu {
 
     private String fmt(double x, double y, double z) {
         return String.format("%.1f, %.1f, %.1f", x, y, z);
+    }
+
+    public void openZoneEditMenu(Player player, String name) {
+        Component title = Component.text("Atmo - " + name + " Settings", NamedTextColor.GOLD, TextDecoration.BOLD);
+        Inventory gui = Bukkit.createInventory(null, 27, title);
+
+        ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glassFiller.getItemMeta();
+        if (glassMeta != null) {
+            glassMeta.displayName(Component.empty());
+            glassFiller.setItemMeta(glassMeta);
+        }
+
+        for (int i = 0; i < gui.getSize(); i++) {
+            gui.setItem(i, glassFiller);
+        }
+
+        // Bouton 1: Teleport to area (Ender Pearl - Slot 11)
+        ItemStack teleportItem = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta teleportMeta = teleportItem.getItemMeta();
+        if (teleportMeta != null) {
+            teleportMeta.displayName(Component.text("Teleport to area", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            teleportMeta.lore(List.of(Component.text("Click to teleport", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
+            teleportItem.setItemMeta(teleportMeta);
+        }
+        gui.setItem(11, teleportItem);
+
+        // Bouton 2: Redefine area (Compass - Slot 13)
+        ItemStack redefineItem = new ItemStack(Material.COMPASS);
+        ItemMeta redefineMeta = redefineItem.getItemMeta();
+        if (redefineMeta != null) {
+            redefineMeta.displayName(Component.text("Redefine area", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            redefineMeta.lore(List.of(Component.text("Click to redefine boundaries", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false)));
+            redefineItem.setItemMeta(redefineMeta);
+        }
+        gui.setItem(13, redefineItem);
+
+        // Bouton 3: Delete area (TNT - Slot 15)
+        ItemStack deleteItem = new ItemStack(Material.BARRIER);
+        ItemMeta deleteMeta = deleteItem.getItemMeta();
+        if (deleteMeta != null) {
+            deleteMeta.displayName(Component.text("Delete area", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            deleteMeta.lore(List.of(Component.text("Click to delete", NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC, false)));
+            deleteItem.setItemMeta(deleteMeta);
+        }
+        gui.setItem(15, deleteItem);
+
+        ItemStack backItem = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backItem.getItemMeta();
+        if (backMeta != null) {
+            backMeta.displayName(Component.text("Back", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
+            backMeta.lore(List.of(Component.text("Click to return", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
+            backItem.setItemMeta(backMeta);
+        }
+        gui.setItem(18, backItem);
+
+        player.openInventory(gui);
     }
 }

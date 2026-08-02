@@ -1,7 +1,6 @@
 package fr.omijica.atmo;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.util.ArrayList;
