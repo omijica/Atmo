@@ -1,6 +1,8 @@
 package fr.omijica.atmo;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 public class ZoneClass {
 
@@ -31,7 +33,7 @@ public class ZoneClass {
         double y = loc.getY();
         double z = loc.getZ();
 
-        return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
+        return x >= minX && x <= maxX +1 && y >= minY && y <= maxY +1 && z >= minZ && z <= maxZ +1;
     }
 
     public String getName() { return name; }
@@ -43,6 +45,17 @@ public class ZoneClass {
     public double getX2() { return maxX; }
     public double getY2() { return maxY; }
     public double getZ2() { return maxZ; }
+
+    public Location getCenterLocation() {
+        World world = Bukkit.getWorld(this.world);
+        if (world == null) return null;
+
+        double centerX = (this.minX + this.maxX ) / 2.0;
+        double centerY = (this.minY + this.maxY) / 2.0;
+        double centerZ = (this.minZ + this.maxZ) / 2.0;
+
+        return new Location(world, centerX + 0.5, centerY, centerZ + 0.5);
+    }
 }
 
 

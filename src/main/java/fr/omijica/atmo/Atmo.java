@@ -90,4 +90,8 @@ public final class Atmo extends JavaPlugin {
         return this.atmoMenu;
     }
 
+    public ZoneChecker getZoneChecker() {
+        return this.zoneChecker;
+    }
+
 }

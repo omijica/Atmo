@@ -1,7 +1,5 @@
 package fr.omijica.atmo;
 
-
-
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 import net.kyori.adventure.text.Component;

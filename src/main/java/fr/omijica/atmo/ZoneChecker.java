@@ -3,6 +3,7 @@ package fr.omijica.atmo;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class ZoneChecker {
 
     public void loadZones(File dataFolder) {
 
+        zones.clear();
         File fichier = new File(dataFolder, "area.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(fichier);
 
@@ -35,6 +37,25 @@ public class ZoneChecker {
     }
 
     public List<ZoneClass> getZones() { return zones; }
+
+    public ZoneClass getZoneByName(String name) {
+        return zones.stream().filter(zone -> zone.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+    }
+
+    public void deleteZone(File dataFolder, String name) {
+        File file = new File(dataFolder, "area.yml");
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        config.set("areas." + name, null);
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        zones.removeIf(zone -> zone.getName().equalsIgnoreCase(name));
+    }
 
     public ZoneClass getPlayerZone(org.bukkit.entity.Player player) {
         ZoneClass bestZone = null;
