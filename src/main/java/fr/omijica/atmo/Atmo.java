@@ -80,6 +80,8 @@ public final class Atmo extends JavaPlugin {
         return this.ambient;
     }
 
+    public AmbientManager getAmbientManager() {return this.ambientManager;}
+
     public ZoneListener getZoneListener() {
         return this.zoneListener;
     }

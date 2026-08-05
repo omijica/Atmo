@@ -12,7 +12,7 @@ public class AmbientManager {
 
     private final Atmo plugin;
     private final Ambient ambient;
-    private final Map<String, Ambient.AmbientData> ambiances;
+    private Map<String, Ambient.AmbientData> ambiances;
     private final Map<UUID, PlayerAmbientState> states = new HashMap<>();
 
     public AmbientManager(Atmo plugin) {
@@ -36,6 +36,17 @@ public class AmbientManager {
         for (Player player : Bukkit.getOnlinePlayers()) {
             handlePlayer(player);
         }
+    }
+
+    public void reload() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerAmbientState state = states.get(player.getUniqueId());
+            if (state != null && state.playingSound != null) {
+                player.stopSound(state.playingSound);
+            }
+        }
+        states.clear();
+        this.ambiances = Ambient.load(plugin.getDataFolder());
     }
 
     private void handlePlayer(Player player) {

@@ -87,6 +87,7 @@ public class AtmoCommand implements CommandExecutor {
                 }
 
                 zoneChecker.loadZones(plugin.getDataFolder());
+                plugin.getAmbientManager().reload();
                 sender.sendMessage(mm.deserialize("<green>Atmo configuration and zones reloaded successfully!"));
                 break;
 
