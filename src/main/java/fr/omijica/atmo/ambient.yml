@@ -1,0 +1,18 @@
+field:
+  background_sound: ""
+  background_volume: 0.35
+  background_interval: 45
+
+  random_sounds:
+    - sound: ""
+      chance: 0.4
+      min_delay: 20
+      max_delay: 50
+      volume: 0.5
+      pitch_variation: true
+    - sound: ""
+      chance: 0.3
+      min_delay: 30
+      max_delay: 70
+      volume: 0.4
+      pitch_variation: true

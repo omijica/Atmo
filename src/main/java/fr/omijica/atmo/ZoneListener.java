@@ -115,6 +115,9 @@ public class ZoneListener implements Listener {
         config.set(path + "music.enabled", false);
         config.set(path + "music.name", "");
 
+        config.set(path + "ambient.enabled", false);
+        config.set(path + "ambient.name", "");
+
         try {
             config.save(file);
         } catch (IOException e) {

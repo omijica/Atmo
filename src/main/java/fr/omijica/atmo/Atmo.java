@@ -13,6 +13,8 @@ public final class Atmo extends JavaPlugin {
     private ZoneListener zoneListener;
     private ZoneChecker zoneChecker;
     private AtmoMenu atmoMenu;
+    private Ambient ambient;
+    private AmbientManager ambientManager;
 
     @Override
     public void onEnable() {
@@ -31,7 +33,7 @@ public final class Atmo extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        File file2 = new File(getDataFolder(), "ambient.yml");
+        File file2 = new File(getDataFolder(), "fr/omijica/atmo/ambient.yml");
         if (!file2.exists()) {
             try {
                 file2.createNewFile();
@@ -51,6 +53,8 @@ public final class Atmo extends JavaPlugin {
         }
 
         this.zoneChecker = new ZoneChecker();
+        this.ambient = new Ambient();
+        this.ambientManager = new AmbientManager(this);
         this.zoneListener = new ZoneListener(this, this.zoneChecker);
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
 
@@ -64,22 +68,16 @@ public final class Atmo extends JavaPlugin {
         zoneChecker.loadZones(getDataFolder());
         getLogger().info("AtmoPlugin enabled !");
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    ZoneClass zone = zoneChecker.getPlayerZone(player);
-                    if (zone == null) {
-                        continue;
-                    }
-                }
-            }
-        }.runTaskTimer(this, 0L, 40L);
+        this.ambientManager.start();
     }
 
     @Override
     public void onDisable() {
         getLogger().info("AtmoPlugin disabled !");
+    }
+
+    public Ambient getAmbient() {
+        return this.ambient;
     }
 
     public ZoneListener getZoneListener() {

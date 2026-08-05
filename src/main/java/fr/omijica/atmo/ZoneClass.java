@@ -11,8 +11,10 @@ public class ZoneClass {
     private final double minX, minY, minZ;
     private final double maxX, maxY, maxZ;
     private final int priority;
+    private final String ambientName;
+    private final boolean ambientEnabled;
 
-    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority) {
+    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled) {
         this.name = name;
         this.world = world;
         this.minX = Math.min(x1, x2);
@@ -22,6 +24,8 @@ public class ZoneClass {
         this.minZ = Math.min(z1, z2);
         this.maxZ = Math.max(z1, z2);
         this.priority = priority;
+        this.ambientName = ambientName;
+        this.ambientEnabled = ambientEnabled;
     }
 
     public boolean contains(org.bukkit.Location loc) {
@@ -45,6 +49,9 @@ public class ZoneClass {
     public double getX2() { return maxX; }
     public double getY2() { return maxY; }
     public double getZ2() { return maxZ; }
+    public String getAmbientName() { return ambientName;}
+    public boolean getAmbientEnabled() { return ambientEnabled;}
+
 
     public Location getCenterLocation() {
         World world = Bukkit.getWorld(this.world);
