@@ -28,7 +28,7 @@ public class Ambient {
     ) {}
 
     public static Map<String, AmbientData> load(File dataFolder) {
-        File file = new File(dataFolder, "area.yml");
+        File file = new File(dataFolder, "ambient.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         Map<String, AmbientData> ambiances = new HashMap<>();
 

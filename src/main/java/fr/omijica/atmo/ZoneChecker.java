@@ -31,8 +31,8 @@ public class ZoneChecker {
             double y2 = config.getDouble(chemin + ".pos2.y");
             double z2 = config.getDouble(chemin + ".pos2.z");
             int priority = config.getInt(chemin + ".priority");
-            String ambientName = config.getString(chemin + "ambient.name");
-            boolean ambientEnabled = config.getBoolean(chemin + "ambient.enabled");
+            String ambientName = config.getString(chemin + ".ambient.name");
+            boolean ambientEnabled = config.getBoolean(chemin + ".ambient.enabled");
 
             zones.add(new ZoneClass(cle, world, x1, y1, z1, x2, y2, z2, priority, ambientName, ambientEnabled));
         }
@@ -69,7 +69,6 @@ public class ZoneChecker {
                 }
             }
         }
-
         return bestZone;
     }
 

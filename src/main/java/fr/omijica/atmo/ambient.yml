@@ -1,7 +1,7 @@
 field:
-  background_sound: ""
-  background_volume: 0.35
-  background_interval: 45
+  background_sound: "minecraft:music.menu"
+  background_volume: 0.5
+  background_interval: 10
 
   random_sounds:
     - sound: ""

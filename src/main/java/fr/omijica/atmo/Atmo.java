@@ -33,7 +33,7 @@ public final class Atmo extends JavaPlugin {
                 e.printStackTrace();
             }
         }
-        File file2 = new File(getDataFolder(), "fr/omijica/atmo/ambient.yml");
+        File file2 = new File(getDataFolder(), "ambient.yml");
         if (!file2.exists()) {
             try {
                 file2.createNewFile();

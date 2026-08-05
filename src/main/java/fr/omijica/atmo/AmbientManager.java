@@ -24,6 +24,7 @@ public class AmbientManager {
     private static class PlayerAmbientState {
         String currentAmbientName;
         int backgroundCooldown;
+        public String playingSound;
         Map<String, Integer> randomCooldowns = new HashMap<>();
     }
 
@@ -45,6 +46,11 @@ public class AmbientManager {
         String zoneAmbientName = (zone != null && zone.getAmbientEnabled()) ? zone.getAmbientName() : null;
 
         if (!Objects.equals(state.currentAmbientName, zoneAmbientName)) {
+
+            if (state.playingSound != null) {
+                player.stopSound(state.playingSound);
+                state.playingSound = null;
+            }
             state.currentAmbientName = zoneAmbientName;
             state.backgroundCooldown = 0;
             state.randomCooldowns.clear();
@@ -54,9 +60,16 @@ public class AmbientManager {
         if (data == null) {
             return;
         }
-        state.backgroundCooldown -= 40;
+
+        state.backgroundCooldown -= 2;
+
         if (state.backgroundCooldown <= 0) {
+            if (state.playingSound != null) {
+                player.stopSound(state.playingSound);
+            }
+
             player.playSound(player.getLocation(), data.backgroundSound(), (float) data.backgroundVolume(), 1.0f);
+            state.playingSound = data.backgroundSound();
             state.backgroundCooldown = data.backgroundInterval();
         }
 
