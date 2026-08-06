@@ -13,11 +13,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.profile.PlayerTextures;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.net.URI;
 import java.util.*;
 
 public class AtmoMenu {
+
+    MiniMessage mm = MiniMessage.miniMessage();
 
     public static void openMenu(Player player) {
         Component title = Component.text("Atmo Menu", NamedTextColor.GOLD, TextDecoration.BOLD);
@@ -69,11 +72,11 @@ public class AtmoMenu {
                 String zoneName = stateSnapshot.getText();
 
                 if (zoneName == null || zoneName.isBlank() || zoneName.equals("Area Name")) {
-                    player.sendMessage(Component.text("Please enter a valid zone name.", NamedTextColor.RED));
+                    MessageUtils.sendError(player, "Please enter a valid zone name.");
                     return List.of(AnvilGUI.ResponseAction.replaceInputText("Area Name"));
                 }
 
-                player.sendMessage(Component.text("Zone \"" + zoneName + "\" successfully created!", NamedTextColor.GREEN));
+                MessageUtils.sendSuccess(player, "Zone <white>\"" + zoneName + "\" <green>successfully created!");
                 ZoneListener zListener = plugin.getZoneListener();
                 zListener.enableCreationMode(player, zoneName);
                 return List.of(AnvilGUI.ResponseAction.close());
@@ -214,10 +217,16 @@ public class AtmoMenu {
             meta.displayName(Component.text(zone.getName(), NamedTextColor.GOLD, TextDecoration.BOLD).decoration(TextDecoration.ITALIC, false));
 
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("World: " + zone.getWorld(), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-            lore.add(Component.text("Pos1: " + fmt(zone.getX1(), zone.getY1(), zone.getZ1()), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-            lore.add(Component.text("Pos2: " + fmt(zone.getX2(), zone.getY2(), zone.getZ2()), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-            lore.add(Component.text("Priority: " + zone.getPriority(), NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+
+            lore.add(mm.deserialize("<!italic><gray>World: " + zone.getWorld()));
+            lore.add(mm.deserialize("<!italic><gray>Pos1: " + fmt(zone.getX1(), zone.getY1(), zone.getZ1())));
+            lore.add(mm.deserialize("<!italic><gray>Pos2: " + fmt(zone.getX2(), zone.getY2(), zone.getZ2())));
+            lore.add(mm.deserialize("<!italic><gray>Priority: <yellow>" + zone.getPriority()));
+            if (zone.getAmbientEnabled()) {
+                lore.add(mm.deserialize("<!italic><gray>Ambient: <green>True <gray>- <yellow>" + zone.getAmbientName()));
+            } else {
+                lore.add(mm.deserialize("<!italic><gray>Ambient: <red>False"));
+            }
 
             meta.lore(lore);
             item.setItemMeta(meta);

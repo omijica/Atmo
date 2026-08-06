@@ -33,10 +33,12 @@ public class MenuListener implements Listener {
 
             if (event.getSlot() == 12) {
                 AtmoMenu.openAnvilMenu(plugin, player);
+                MessageUtils.playClick(player);
             }
 
             else if (event.getSlot() == 14) {
                 plugin.getAtmoMenu().openPaperMenu(player, 0);
+                MessageUtils.playClick(player);
             }
         } else if (title.equals("Atmo Menu (AREAS)")) {
             event.setCancelled(true);
@@ -51,6 +53,7 @@ public class MenuListener implements Listener {
                     String name = PlainTextComponentSerializer.plainText().serialize(displayNameComponent);
 
                     plugin.getAtmoMenu().openZoneEditMenu(player, name);
+                    MessageUtils.playClick(player);
                 }
             }
 
@@ -59,8 +62,10 @@ public class MenuListener implements Listener {
 
             if (activeSlot == 52) {
                 plugin.getAtmoMenu().openPaperMenu(player, activePage - 1);
+                MessageUtils.playClick(player);
             } else if (activeSlot == 53) {
                 plugin.getAtmoMenu().openPaperMenu(player, activePage + 1);
+                MessageUtils.playClick(player);
             }
         } else if (title.startsWith("Atmo - ") && title.endsWith(" Settings")) {
             event.setCancelled(true);
@@ -72,7 +77,7 @@ public class MenuListener implements Listener {
             ZoneClass zone = plugin.getZoneChecker().getZoneByName(zoneName);
 
             if (zone == null) {
-                player.sendMessage(Component.text("Zone not found.", NamedTextColor.RED));
+                MessageUtils.sendError(player, "Zone not found.");
                 return;
             }
 
@@ -81,8 +86,9 @@ public class MenuListener implements Listener {
                 Location target = zone.getCenterLocation();
                 if (target != null) {
                     player.teleport(target);
+                    MessageUtils.playClick(player);
                 } else {
-                    player.sendMessage(Component.text("Teleport point not found.", NamedTextColor.RED));
+                    MessageUtils.sendError(player, "Teleport point not found.");
                 }
                 player.closeInventory();
 
@@ -90,12 +96,13 @@ public class MenuListener implements Listener {
             // Slot 13: Redefine
             else if (slot == 13) {
                 plugin.getZoneListener().enableCreationMode(player, zoneName);
+                MessageUtils.playClick(player);
                 player.closeInventory();
             }
             // Slot 15: Delete
             else if (slot == 15) {
                 plugin.getZoneChecker().deleteZone(plugin.getDataFolder(), zoneName);
-                player.sendMessage(Component.text("Zone " + zoneName + " deleted!", NamedTextColor.RED));
+                MessageUtils.sendSuccess(player, "Zone " + zoneName + " deleted!");
 
                 int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);
                 plugin.getAtmoMenu().openPaperMenu(player, activePage);
@@ -104,6 +111,7 @@ public class MenuListener implements Listener {
             else if (slot == 18) {
                 int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);
                 plugin.getAtmoMenu().openPaperMenu(player, activePage);
+                MessageUtils.playClick(player);
             }
         }
     }

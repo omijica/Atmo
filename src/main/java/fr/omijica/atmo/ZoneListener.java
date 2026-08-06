@@ -1,6 +1,5 @@
 package fr.omijica.atmo;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,8 +17,6 @@ import java.util.UUID;
 
 public class ZoneListener implements Listener {
 
-    MiniMessage mm = MiniMessage.miniMessage();
-
     private final Atmo plugin;
     private final ZoneChecker zoneChecker;
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
@@ -31,9 +28,9 @@ public class ZoneListener implements Listener {
 
     public void enableCreationMode(Player player, String zoneName) {
         activeSessions.put(player.getUniqueId(), new ZoneCreationSession(zoneName));
-        player.sendMessage(mm.deserialize("<green>Edit mode enabled for :<white> " + zoneName + " <gray>/atmo editor to exit."));
-        player.sendMessage(mm.deserialize("<gray>- <white>Left-click <gray>on a block : Position 1"));
-        player.sendMessage(mm.deserialize("<gray>- <white>Right-click <gray>on a block : Position 2"));
+        MessageUtils.sendInfo(player, "Edit mode enabled for: <white>" + zoneName + " <gray>(/atmo editor to exit)");
+        MessageUtils.sendMessage(player, "<gray>- <white>Left-click <gray>on a block: Position 1");
+        MessageUtils.sendMessage(player, "<gray>- <white>Right-click <gray>on a block: Position 2");
     }
 
     @EventHandler
@@ -50,13 +47,13 @@ public class ZoneListener implements Listener {
         if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
             event.setCancelled(true);
             session.setPos1(clickedLocation);
-            player.sendMessage(mm.deserialize("<green>Position 1 defined : " + formatLoc(clickedLocation)));
+            MessageUtils.sendSuccess(player, "Position 1 defined: <white>" + formatLoc(clickedLocation));
             checkLoc(player, session);
         }
         else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             session.setPos2(clickedLocation);
-            player.sendMessage(mm.deserialize("<green>Position 2 defined : " + formatLoc(clickedLocation)));
+            MessageUtils.sendSuccess(player, "Position 2 defined: <white>" + formatLoc(clickedLocation));
             checkLoc(player, session);
         }
     }
@@ -64,13 +61,13 @@ public class ZoneListener implements Listener {
     private void checkLoc(Player player, ZoneCreationSession session) {
         if (session.isComplete()) {
             if (!session.getPos1().getWorld().equals(session.getPos2().getWorld())) {
-                player.sendMessage(mm.deserialize("<red>Error: Both positions must be in the same world."));
+                MessageUtils.sendError(player, "Both positions must be in the same world.");
                 return;
             }
 
             saveZoneToYml(session);
             activeSessions.remove(player.getUniqueId());
-            player.sendMessage(mm.deserialize("<green>✔ <white>Area <green>" + session.getZoneName() + " <white>successfully saved to area.yml !"));
+            MessageUtils.sendSuccess(player, "Area <white>" + session.getZoneName() + " <green>successfully saved!");
         }
     }
 
