@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AmbientManager {
 
@@ -84,5 +85,18 @@ public class AmbientManager {
             state.backgroundCooldown = data.backgroundInterval();
         }
 
+        for (Ambient.RandomSoundData sound : data.randomSounds()) {
+            int cooldown = state.randomCooldowns.getOrDefault(sound.sound(), 0);
+            cooldown -= 2;
+
+            if (cooldown <= 0) {
+                if (Math.random() < sound.chance()) {
+                    float pitch = sound.pitchVariation() ? 0.9f + (float) (Math.random() * 0.2f) : 1.0f;
+                    player.playSound(player.getLocation(), sound.sound(), (float) sound.volume(), pitch);
+                }
+                cooldown = ThreadLocalRandom.current().nextInt(sound.minDelay(), sound.maxDelay() + 1);
+            }
+            state.randomCooldowns.put(sound.sound(), cooldown);
+        }
     }
 }
