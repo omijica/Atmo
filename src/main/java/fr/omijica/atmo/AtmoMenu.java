@@ -18,14 +18,17 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.net.URI;
 import java.util.*;
 
+// Gère les interfaces graphiques (GUI) du plugin.
 public class AtmoMenu {
 
     MiniMessage mm = MiniMessage.miniMessage();
 
+    // Ouvre le menu principal pour un joueur.
     public static void openMenu(Player player) {
         Component title = Component.text("Atmo Menu", NamedTextColor.GOLD, TextDecoration.BOLD);
         Inventory gui = Bukkit.createInventory(null, 27, title);
 
+        // Remplit l'inventaire avec des vitres grises.
         ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glassFiller.getItemMeta();
         if (glassMeta != null) {
@@ -37,7 +40,7 @@ public class AtmoMenu {
             gui.setItem(i,glassFiller);
         }
 
-        //TRIPWIRE
+        // Ajoute le bouton pour créer une zone.
         ItemStack tripwireItem = new ItemStack(Material.TRIPWIRE_HOOK);
         ItemMeta tripwireMeta = tripwireItem.getItemMeta();
         if (tripwireMeta != null) {
@@ -48,7 +51,7 @@ public class AtmoMenu {
         }
         gui.setItem(12, tripwireItem);
 
-        //PAPER
+        // Ajoute le bouton pour éditer une zone.
         ItemStack paperItem = new ItemStack(Material.PAPER);
         ItemMeta paperMeta = paperItem.getItemMeta();
         if (paperMeta != null) {
@@ -62,20 +65,24 @@ public class AtmoMenu {
         player.openInventory(gui);
     }
 
+    // Ouvre une interface d'enclume pour saisir le nom de la zone.
     public static void openAnvilMenu(Atmo plugin, Player player) {
         new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 
+                // Vérifie si le clic est sur le slot de sortie.
                 if (slot != AnvilGUI.Slot.OUTPUT) {
                     return Collections.emptyList();
                 }
 
                 String zoneName = stateSnapshot.getText();
 
+                // Valide le nom saisi.
                 if (zoneName == null || zoneName.isBlank() || zoneName.equals("Area Name")) {
                     MessageUtils.sendError(player, "Please enter a valid zone name.");
                     return List.of(AnvilGUI.ResponseAction.replaceInputText("Area Name"));
                 }
 
+                // Initialise la création de la zone.
                 MessageUtils.sendSuccess(player, "Zone <white>\"" + zoneName + "\" <green>successfully created!");
                 ZoneListener zListener = plugin.getZoneListener();
                 zListener.enableCreationMode(player, zoneName);
@@ -91,9 +98,9 @@ public class AtmoMenu {
     /* MENU LIST AREAS */
 
     private final ZoneChecker zoneChecker;
-    private static final int PAGE_SLOTS = 45; // slots 0 à 44
-    private static final int PREVIOUS = 52; // "Left"
-    private static final int NEXT   = 53; // "Right"
+    private static final int PAGE_SLOTS = 45; // Emplacements par page.
+    private static final int PREVIOUS = 52; // Bouton page précédente.
+    private static final int NEXT   = 53; // Bouton page suivante.
     private final Map<UUID, Integer> playerPage = new HashMap<>();
 
     AtmoMenu(ZoneChecker zoneChecker) {
@@ -104,15 +111,17 @@ public class AtmoMenu {
         return playerPage;
     }
 
+    // Affiche la liste des zones paginée.
     public void openPaperMenu(Player player, int page) {
         Component title = Component.text("Atmo Menu (AREAS)", NamedTextColor.GOLD, TextDecoration.BOLD);
         Inventory gui = Bukkit.createInventory(null, 54, title);
 
-        /* RIGHT ITEM */
+        /* Bouton Suivant */
         String base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGU0MDNjYzdiYmFjNzM2NzBiZDU0M2Y2YjA5NTViYWU3YjhlOTEyM2Q4M2JkNzYwZjYyMDRjNWFmZDhiZTdlMSJ9fX0=";
         ItemStack rightItem = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta rightMeta = (SkullMeta) rightItem.getItemMeta();
 
+        // Remplit la barre du bas.
         ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glassFiller.getItemMeta();
         if (glassMeta != null) {
@@ -124,6 +133,7 @@ public class AtmoMenu {
             gui.setItem(i,glassFiller);
         }
 
+        // Configure la tête pour le bouton "Suivant".
         if (rightMeta != null) {
             try {
                 String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
@@ -144,11 +154,12 @@ public class AtmoMenu {
 
         }
 
-        /* LEFT ITEM */
+        /* Bouton Précédent */
         base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTMzYWQ1YzIyZGIxNjQzNWRhYWQ2MTU5MGFiYTUxZDkzNzkxNDJkZDU1NmQ2YzQyMmE3MTEwY2EzYWJlYTUwIn19fQ==";
         ItemStack leftItem = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta leftMeta = (SkullMeta) leftItem.getItemMeta();
 
+        // Configure la tête pour le bouton "Précédent".
         if (leftMeta != null) {
             try {
                 String decodedJson = new String(Base64.getDecoder().decode(base64Texture));
@@ -169,8 +180,7 @@ public class AtmoMenu {
 
         }
 
-        /* BARRIER ITEM */
-
+        /* Bouton Vide (Barrière) */
         ItemStack barrierItem = new ItemStack(Material.BARRIER);
         ItemMeta barrierMeta = barrierItem.getItemMeta();
         if (barrierMeta != null) {
@@ -178,7 +188,7 @@ public class AtmoMenu {
             barrierItem.setItemMeta(barrierMeta);
         }
 
-        /* CODE MENU */
+        /* Pagination et affichage des zones */
         List<ZoneClass> zones = zoneChecker.getZones();
         int totalPages = Math.max(1, (int) Math.ceil((double) zones.size() / PAGE_SLOTS));
         page = Math.max(0, Math.min(page, totalPages - 1));
@@ -192,6 +202,7 @@ public class AtmoMenu {
             slot++;
         }
 
+        // Gère l'affichage des boutons de navigation.
         if (page > 0) {
             gui.setItem(PREVIOUS, leftItem);
         } else {
@@ -209,6 +220,7 @@ public class AtmoMenu {
         playerPage.put(player.getUniqueId(), page);
     }
 
+    // Crée un item représentant une zone dans le menu.
     private ItemStack createZoneItem(ZoneClass zone) {
         ItemStack item = new ItemStack(Material.MAP);
         ItemMeta meta = item.getItemMeta();
@@ -235,14 +247,17 @@ public class AtmoMenu {
         return item;
     }
 
+    // Formate les coordonnées.
     private String fmt(double x, double y, double z) {
         return String.format("%.1f, %.1f, %.1f", x, y, z);
     }
 
+    // Ouvre le menu d'édition pour une zone spécifique.
     public void openZoneEditMenu(Player player, String name) {
         Component title = Component.text("Atmo - " + name + " Settings", NamedTextColor.GOLD, TextDecoration.BOLD);
         Inventory gui = Bukkit.createInventory(null, 27, title);
 
+        // Remplit l'inventaire avec des vitres grises.
         ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glassFiller.getItemMeta();
         if (glassMeta != null) {
@@ -254,7 +269,7 @@ public class AtmoMenu {
             gui.setItem(i, glassFiller);
         }
 
-        // Bouton 1: Teleport to area (Ender Pearl - Slot 11)
+        // Bouton : Téléportation à la zone.
         ItemStack teleportItem = new ItemStack(Material.ENDER_PEARL);
         ItemMeta teleportMeta = teleportItem.getItemMeta();
         if (teleportMeta != null) {
@@ -264,7 +279,7 @@ public class AtmoMenu {
         }
         gui.setItem(11, teleportItem);
 
-        // Bouton 2: Redefine area (Compass - Slot 13)
+        // Bouton : Redéfinir les limites de la zone.
         ItemStack redefineItem = new ItemStack(Material.COMPASS);
         ItemMeta redefineMeta = redefineItem.getItemMeta();
         if (redefineMeta != null) {
@@ -274,7 +289,7 @@ public class AtmoMenu {
         }
         gui.setItem(13, redefineItem);
 
-        // Bouton 3: Delete area (TNT - Slot 15)
+        // Bouton : Supprimer la zone.
         ItemStack deleteItem = new ItemStack(Material.BARRIER);
         ItemMeta deleteMeta = deleteItem.getItemMeta();
         if (deleteMeta != null) {
@@ -284,6 +299,7 @@ public class AtmoMenu {
         }
         gui.setItem(15, deleteItem);
 
+        // Bouton : Retour au menu précédent.
         ItemStack backItem = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backItem.getItemMeta();
         if (backMeta != null) {

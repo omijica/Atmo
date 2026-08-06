@@ -81,6 +81,15 @@ public class AtmoCommand implements CommandExecutor {
                 MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 
+            /* case "test":
+                zoneChecker.getZones().clear();
+                for (int i = 1; i <= 100; i++) {
+                    zoneChecker.getZones().add(new ZoneClass("Zone #" + i, "world", i * 10, 64, i * 10, i * 10 + 5, 70, i * 10 + 5, i, "test", false));
+                }
+
+                plugin.getAtmoMenu().openPaperMenu(player, 0);
+                return true; */
+
             default:
                 MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload>");
                 break;

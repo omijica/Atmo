@@ -1,6 +1,7 @@
 package fr.omijica.atmo;
 
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -48,12 +49,14 @@ public class ZoneListener implements Listener {
             event.setCancelled(true);
             session.setPos1(clickedLocation);
             MessageUtils.sendSuccess(player, "Position 1 defined: <white>" + formatLoc(clickedLocation));
+            player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.0f);
             checkLoc(player, session);
         }
         else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             session.setPos2(clickedLocation);
             MessageUtils.sendSuccess(player, "Position 2 defined: <white>" + formatLoc(clickedLocation));
+            player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.0f);
             checkLoc(player, session);
         }
     }
@@ -65,9 +68,11 @@ public class ZoneListener implements Listener {
                 return;
             }
 
+
             saveZoneToYml(session);
             activeSessions.remove(player.getUniqueId());
             MessageUtils.sendSuccess(player, "Area <white>" + session.getZoneName() + " <green>successfully saved!");
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
         }
     }
 
