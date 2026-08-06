@@ -3,13 +3,13 @@ package fr.omijica.atmo;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-public class AtmoCommand implements CommandExecutor {
+public class AtmoCommand implements CommandExecutor, TabExecutor {
 
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
     private final Atmo plugin;
@@ -95,8 +95,29 @@ public class AtmoCommand implements CommandExecutor {
                 break;
 
         }
-
         return true;
+    }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+
+        if (!(sender instanceof Player player)) {
+            return Collections.emptyList();
+        }
+
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info"));
+
+            if (!player.hasPermission("atmo.reload")) {
+                subCommands.remove("reload");
+            }
+
+            StringUtil.copyPartialMatches(args[0], subCommands, completions);
+        }
+
+        Collections.sort(completions);
+        return completions;
     }
 }

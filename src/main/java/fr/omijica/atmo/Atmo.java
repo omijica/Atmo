@@ -59,7 +59,9 @@ public final class Atmo extends JavaPlugin {
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
 
         if (getCommand("atmo") != null) {
-            getCommand("atmo").setExecutor(new AtmoCommand(this, this.zoneChecker));
+            AtmoCommand atmoCommand = new AtmoCommand(this, this.zoneChecker);
+            getCommand("atmo").setExecutor(atmoCommand);
+            getCommand("atmo").setTabCompleter(atmoCommand);
         }
 
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
