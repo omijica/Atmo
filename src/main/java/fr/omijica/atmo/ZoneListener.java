@@ -112,13 +112,27 @@ public class ZoneListener implements Listener {
         config.set(path + "pos2.y", p2.getBlockY());
         config.set(path + "pos2.z", p2.getBlockZ());
 
-        config.set(path + "priority", 1);
-
-        config.set(path + "music.enabled", false);
-        config.set(path + "music.name", "");
-
-        config.set(path + "ambient.enabled", false);
-        config.set(path + "ambient.name", "");
+        if (!config.contains(path + "priority")) {
+            config.set(path + "priority", 1);
+        }
+        if (!config.contains(path + "music.enabled")) {
+            config.set(path + "music.enabled", false);
+        }
+        if (!config.contains(path + "music.name")) {
+            config.set(path + "music.name", "");
+        }
+        if (!config.contains(path + "music.volume")) {
+            config.set(path + "music.volume", 1);
+        }
+        if (!config.contains(path + "music.duration")) {
+            config.set(path + "music.duration", "");
+        }
+        if (!config.contains(path + "ambient.enabled")) {
+            config.set(path + "ambient.enabled", false);
+        }
+        if (!config.contains(path + "ambient.name")) {
+            config.set(path + "ambient.name", "");
+        }
 
         try {
             config.save(file);

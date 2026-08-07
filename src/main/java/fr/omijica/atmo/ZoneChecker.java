@@ -33,8 +33,12 @@ public class ZoneChecker {
             int priority = config.getInt(chemin + ".priority");
             String ambientName = config.getString(chemin + ".ambient.name");
             boolean ambientEnabled = config.getBoolean(chemin + ".ambient.enabled");
+            String musicName = config.getString(chemin + ".music.name");
+            boolean musicEnabled = config.getBoolean(chemin + ".music.enabled");
+            int musicVolume = config.getInt(chemin + ".music.volume");
+            int musicDuration = config.getInt(chemin + ".music.duration");
 
-            zones.add(new ZoneClass(cle, world, x1, y1, z1, x2, y2, z2, priority, ambientName, ambientEnabled));
+            zones.add(new ZoneClass(cle, world, x1, y1, z1, x2, y2, z2, priority, ambientName, ambientEnabled, musicName, musicEnabled, musicVolume, musicDuration));
         }
     }
 

@@ -13,8 +13,12 @@ public class ZoneClass {
     private final int priority;
     private final String ambientName;
     private final boolean ambientEnabled;
+    private final String musicName;
+    private final boolean musicEnabled;
+    private final int musicVolume;
+    private final int musicDuration;
 
-    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled) {
+    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled, String musicName, boolean musicEnabled, int musicVolume, int musicDuration) {
         this.name = name;
         this.world = world;
         this.minX = Math.min(x1, x2);
@@ -26,6 +30,10 @@ public class ZoneClass {
         this.priority = priority;
         this.ambientName = ambientName;
         this.ambientEnabled = ambientEnabled;
+        this.musicName = musicName;
+        this.musicEnabled = musicEnabled;
+        this.musicVolume = musicVolume;
+        this.musicDuration = musicDuration;
     }
 
     public boolean contains(org.bukkit.Location loc) {
@@ -51,6 +59,10 @@ public class ZoneClass {
     public double getZ2() { return maxZ; }
     public String getAmbientName() { return ambientName;}
     public boolean getAmbientEnabled() { return ambientEnabled;}
+    public String getMusicName() { return musicName;}
+    public boolean getMusicEnabled() { return musicEnabled;}
+    public int getMusicVolume() { return musicVolume; }
+    public int getMusicDuration() {return musicDuration;}
 
 
     public Location getCenterLocation() {
