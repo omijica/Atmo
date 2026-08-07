@@ -1,9 +1,6 @@
 package fr.omijica.atmo;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,6 +61,7 @@ public final class Atmo extends JavaPlugin {
             getCommand("atmo").setTabCompleter(atmoCommand);
         }
 
+        getServer().getPluginManager().registerEvents(this.ambientManager, this);
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(this.zoneListener, this);
 

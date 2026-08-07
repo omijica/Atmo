@@ -4,6 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +14,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class AmbientManager {
+public class AmbientManager implements Listener {
 
     private final Atmo plugin;
     private final Ambient ambient;
@@ -144,6 +147,7 @@ public class AmbientManager {
     }
 
     private void stopAll(Player player, PlayerMusicState state) {
+        if (state == null) return;
         if (state.playingSound != null) {
             player.stopSound(state.playingSound);
             state.playingSound = null;
@@ -166,5 +170,14 @@ public class AmbientManager {
         double z = base.getZ() + Math.sin(angle) * distance;
 
         return new Location(base.getWorld(), x, base.getY(), z);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        PlayerMusicState state = states.get(player.getUniqueId());
+
+        stopAll(player,state);
+        states.remove(player.getUniqueId());
     }
 }
