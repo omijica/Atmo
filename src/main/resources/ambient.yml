@@ -1,0 +1,31 @@
+# Ambient sound configurations
+# You can define different ambient profiles here.
+# 'field' is an example profile name.
+
+field:
+  # The background sound that loops
+  background_sound: "minecraft:music.menu"
+  # Volume of the background sound (0.0 to 1.0)
+  background_volume: 0.5
+  # Interval in seconds between background sound repeats
+  background_interval: 10
+
+  # List of random sounds that can play in this ambient profile
+  random_sounds:
+    - sound: "minecraft:ambient.cave"
+      # Chance of playing (0.0 to 1.0)
+      chance: 0.4
+      # Minimum delay in seconds before playing again
+      min_delay: 20
+      # Maximum delay in seconds before playing again
+      max_delay: 50
+      # Volume of the random sound
+      volume: 0.5
+      # Whether to slightly randomize the pitch
+      pitch_variation: true
+    - sound: "minecraft:entity.bird.ambient"
+      chance: 0.3
+      min_delay: 30
+      max_delay: 70
+      volume: 0.4
+      pitch_variation: true

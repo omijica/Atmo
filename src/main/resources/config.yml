@@ -1,0 +1,18 @@
+# General configuration for Atmo plugin
+config:
+  # Default settings for the general area (when not in a specific zone)
+  general_area:
+    ambient:
+      # Whether ambient sounds are enabled globally
+      enabled: true
+      # The default ambient profile to use (defined in ambient.yml)
+      name: field
+    music:
+      # Whether background music is enabled
+      enabled: true
+      # The sound name for music
+      name: "minecraft:custom.musc"
+      # Volume level (0-100)
+      volume: 50
+      # Duration of the music track in seconds
+      duration: 300
