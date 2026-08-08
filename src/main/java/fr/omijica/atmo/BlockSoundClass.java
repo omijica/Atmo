@@ -11,10 +11,8 @@ import java.util.Map;
 
 public class BlockSoundClass {
 
-    public record BlockEntry(
-            String type,
+    public record EntityEntry(
             String entity,
-            String block,
             int customModelData,
             int radius,
             String sound,
@@ -26,9 +24,7 @@ public class BlockSoundClass {
             double pitchBase,
             boolean enabled
     ) {
-        public String getType() { return type; }
         public String getEntity() { return entity; }
-        public String getBlock() { return block; }
         public int getCustomModelData() { return customModelData; }
         public int getRadius() { return radius; }
         public String getSound() { return sound; }
@@ -66,10 +62,10 @@ public class BlockSoundClass {
     }
 
     public record BlockSoundData(
-            Map<String, BlockEntry> blocks,
+            Map<String, EntityEntry> entities,
             Map<String, PositionEntry> positions
     ) {
-        public Map<String, BlockEntry> getBlocks() { return blocks; }
+        public Map<String, EntityEntry> getEntities() { return entities; }
         public Map<String, PositionEntry> getPositions() { return positions; }
     }
 
@@ -77,18 +73,16 @@ public class BlockSoundClass {
         File file = new File(dataFolder, "blockSound.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-        Map<String, BlockEntry> blocks = new LinkedHashMap<>();
+        Map<String, EntityEntry> entities = new LinkedHashMap<>();
         Map<String, PositionEntry> positions = new LinkedHashMap<>();
 
-        ConfigurationSection blocksSection = config.getConfigurationSection("blockSound.blocks");
+        ConfigurationSection blocksSection = config.getConfigurationSection("blockSound.entities");
         if (blocksSection != null) {
             for (String key : blocksSection.getKeys(false)) {
                 ConfigurationSection entrySection = blocksSection.getConfigurationSection(key);
                 if (entrySection == null) continue;
 
-                String type = entrySection.getString("Type", "");
                 String entity = entrySection.getString("Entity", entrySection.getString("entity", ""));
-                String block = entrySection.getString("block", null);
                 int customModelData = entrySection.getInt("customModelData", 0);
                 int radius = entrySection.getInt("radius", 5);
                 String sound = entrySection.getString("sound", "");
@@ -100,8 +94,8 @@ public class BlockSoundClass {
                 double pitchBase = entrySection.getDouble("pitchBase", 1.0);
                 boolean enabled = entrySection.getBoolean("enabled", false);
 
-                blocks.put(key, new BlockEntry(
-                        type, entity, block, customModelData, radius, sound,
+                entities.put(key, new EntityEntry(
+                        entity, customModelData, radius, sound,
                         chance, minDelay, maxDelay, volume, pitchVariation, pitchBase, enabled
                 ));
             }
@@ -133,6 +127,6 @@ public class BlockSoundClass {
             }
         }
 
-        return new BlockSoundData(blocks, positions);
+        return new BlockSoundData(entities, positions);
     }
 }

@@ -3,10 +3,14 @@ package fr.omijica.atmo;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
+import org.bukkit.World;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +27,18 @@ public class SoundManager implements Listener {
     private ConfigClass.GeneralAreaData generalArea; // config générale (zone par défaut)
     private final Map<UUID, PlayerMusicState> states = new HashMap<>(); // état son/musique par joueur
 
+    private BlockSoundClass.BlockSoundData blockSoundData;
+    private Map<String, BlockSoundClass.EntityEntry> blockSounds;
+    private Map<String, BlockSoundClass.PositionEntry> positionSounds;
+
     public SoundManager(Atmo plugin) {
         this.plugin = plugin;
         this.ambient = plugin.getAmbient();
         this.ambiances = Ambient.load(plugin.getDataFolder());
         this.generalArea = plugin.getConfigClass().load(plugin.getDataFolder());
+        this.blockSoundData = plugin.getBlockSoundClass().load(plugin.getDataFolder());
+        this.blockSounds = blockSoundData.getEntities();
+        this.positionSounds = blockSoundData.getPositions();
     }
 
     // Stocke l'état audio courant d'un joueur
@@ -40,6 +51,8 @@ public class SoundManager implements Listener {
         String currentMusicName; // nom de la musique active
         int musicCooldown; // temps avant rejouer la musique
         String playingMusicSound; // musique en cours
+
+        Map<String, Integer> blockSoundCooldowns = new HashMap<>();
     }
 
     // Lance la boucle qui met à jour les joueurs toutes les 2 secondes (40 ticks)
@@ -63,6 +76,7 @@ public class SoundManager implements Listener {
         states.clear();
         this.ambiances = Ambient.load(plugin.getDataFolder());
         this.generalArea = ConfigClass.load(plugin.getDataFolder());
+        this.blockSoundData = plugin.getBlockSoundClass().load(plugin.getDataFolder());
     }
 
     public void stop() {
@@ -77,6 +91,8 @@ public class SoundManager implements Listener {
         ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player);
         UUID uuid = player.getUniqueId();
         PlayerMusicState state = states.computeIfAbsent(uuid, k -> new PlayerMusicState());
+
+        handleBlockSounds(player, state);
 
         // Gestion de la musique
         if (isMusicEnabledEffective(zone)) {
@@ -172,6 +188,89 @@ public class SoundManager implements Listener {
         }
     }
 
+    private void handleBlockSounds(Player player, PlayerMusicState state) {
+        handlePositionsSounds(player, state);
+        handleEntityEntries(player, state);
+    }
+
+    private void handlePositionsSounds(Player player, PlayerMusicState state) {
+        for (Map.Entry<String, BlockSoundClass.PositionEntry> entry : positionSounds.entrySet()) {
+            String key = entry.getKey();
+            BlockSoundClass.PositionEntry data = entry.getValue();
+
+            if (!data.getEnabled()) continue;
+
+            int cooldown = state.blockSoundCooldowns.getOrDefault(key, 0) - 2;
+            if (cooldown > 0) {
+                state.blockSoundCooldowns.put(key, cooldown);
+                continue;
+            }
+
+            Location matchedLocation = null;
+
+            for (String rawLocation : data.getLocations()) {
+                Location target = parseLocation(rawLocation);
+                if (target == null || target.getWorld() != player.getWorld()) continue;
+
+                if (target.distance(player.getLocation()) <= data.getRadius()) {
+                    matchedLocation = target;
+                    break;
+                }
+            }
+
+            if (matchedLocation != null && Math.random() < data.getChance()) {
+                float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
+                player.playSound(matchedLocation, data.getSound(), (float) data.getVolume(), pitch);
+            }
+
+            int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
+            state.blockSoundCooldowns.put(key, nextCooldown);
+        }
+    }
+
+    private void handleEntityEntries(Player player, PlayerMusicState state) {
+        for (Map.Entry<String, BlockSoundClass.EntityEntry> entry : blockSounds.entrySet()) {
+            String key = entry.getKey();
+            BlockSoundClass.EntityEntry data = entry.getValue();
+
+            if (!data.getEnabled()) continue;
+
+            int cooldown = state.blockSoundCooldowns.getOrDefault(key, 0) - 2;
+            if (cooldown > 0) {
+                state.blockSoundCooldowns.put(key, cooldown);
+                continue;
+            }
+
+            Entity matchingEntity = isNearMatchingEntity(player, data);
+
+            if (matchingEntity != null && Math.random() < data.getChance()) {
+                float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
+                player.playSound(matchingEntity.getLocation(), data.getSound(), (float) data.getVolume(), pitch);
+            }
+
+            int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
+            state.blockSoundCooldowns.put(key, nextCooldown);
+        }
+    }
+
+    private Entity isNearMatchingEntity(Player player, BlockSoundClass.EntityEntry data) {
+        double r = data.getRadius();
+
+        for (Entity nearby : player.getNearbyEntities(r,r,r)) {
+            if (!nearby.getType().name().equalsIgnoreCase(data.getEntity())) continue;
+
+            if (data.getCustomModelData() == 0) return nearby;
+
+            if (nearby instanceof ArmorStand standEntity) {
+                ItemStack helmet = standEntity.getEquipment().getHelmet();
+                if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData() && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
+                    return nearby;
+                }
+            }
+        }
+        return null;
+    }
+
     // Calcule une position aléatoire autour du joueur (pour les sons ambiants)
     private Location randomLocationAround(Player player, double minRadius, double maxRadius) {
         Location base = player.getLocation();
@@ -253,5 +352,22 @@ public class SoundManager implements Listener {
     private void stopAll(Player player, PlayerMusicState state) {
         stopAmbient(player, state);
         stopMusic(player, state);
+    }
+
+    private Location parseLocation(String raw) {
+        String[] parts = raw.split(",");
+        if (parts.length != 4) return null;
+
+        World world = Bukkit.getWorld(parts[0].trim());
+        if (world == null) return null;
+
+        try {
+            double x = Double.parseDouble(parts[1].trim());
+            double y = Double.parseDouble(parts[2].trim());
+            double z = Double.parseDouble(parts[3].trim());
+            return new Location(world, x, y, z);
+        } catch (NumberFormatException e) {
+            return null; // ligne mal écrite dans le YAML
+        }
     }
 }
