@@ -77,7 +77,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 }
 
                 zoneChecker.loadZones(plugin.getDataFolder());
-                plugin.getAmbientManager().reload();
+                plugin.getSoundManager().reload();
                 MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 

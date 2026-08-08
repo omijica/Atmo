@@ -10,7 +10,7 @@ public final class Atmo extends JavaPlugin {
     private ZoneChecker zoneChecker;
     private AtmoMenu atmoMenu;
     private Ambient ambient;
-    private SoundManager ambientManager;
+    private SoundManager soundManager;
     private ConfigClass configClass;
     private BlockSoundClass blockSoundClass;
 
@@ -26,7 +26,7 @@ public final class Atmo extends JavaPlugin {
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
-        this.ambientManager = new SoundManager(this);
+        this.soundManager = new SoundManager(this);
         this.zoneListener = new ZoneListener(this, this.zoneChecker);
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
         this.configClass = new ConfigClass();
@@ -38,18 +38,19 @@ public final class Atmo extends JavaPlugin {
             getCommand("atmo").setTabCompleter(atmoCommand);
         }
 
-        getServer().getPluginManager().registerEvents(this.ambientManager, this);
+        getServer().getPluginManager().registerEvents(this.soundManager, this);
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(this.zoneListener, this);
 
         zoneChecker.loadZones(getDataFolder());
         getLogger().info("AtmoPlugin enabled !");
 
-        this.ambientManager.start();
+        this.soundManager.start();
     }
 
     @Override
     public void onDisable() {
+        this.soundManager.stop();
         getLogger().info("AtmoPlugin disabled !");
     }
 
@@ -59,7 +60,7 @@ public final class Atmo extends JavaPlugin {
         return this.ambient;
     }
 
-    public SoundManager getAmbientManager() {return this.ambientManager;}
+    public SoundManager getSoundManager() {return this.soundManager;}
 
     public ZoneListener getZoneListener() {
         return this.zoneListener;

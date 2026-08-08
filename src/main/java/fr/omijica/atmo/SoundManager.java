@@ -65,6 +65,13 @@ public class SoundManager implements Listener {
         this.generalArea = ConfigClass.load(plugin.getDataFolder());
     }
 
+    public void stop() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerMusicState state = states.get(player.getUniqueId());
+            stopAll(player, state);
+        }
+    }
+
     // Gère l'ambiance et la musique d'un joueur selon sa zone
     private void handlePlayer(Player player) {
         ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player);

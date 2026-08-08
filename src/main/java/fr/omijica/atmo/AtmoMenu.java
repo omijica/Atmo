@@ -235,7 +235,7 @@ public class AtmoMenu {
             lore.add(mm.deserialize("<!italic><gray>Pos2: " + fmt(zone.getX2(), zone.getY2(), zone.getZ2())));
             lore.add(mm.deserialize("<!italic><gray>Priority: <yellow>" + zone.getPriority()));
             if (zone.getMusicEnabled()) {
-                lore.add(mm.deserialize("<!italic><gray>Music: <green>True <gray>- <yellow>" + zone.getMusicName() + zone.getMusicVolume()));
+                lore.add(mm.deserialize("<!italic><gray>Music: <green>True <gray>- <yellow>" + zone.getMusicName() + " " + zone.getMusicVolume() + "\uD83D\uDD0A"));
             } else {
                 lore.add(mm.deserialize("<!italic><gray>Music: <red>False"));
             }
