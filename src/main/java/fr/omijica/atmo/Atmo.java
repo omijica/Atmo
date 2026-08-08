@@ -1,10 +1,8 @@
 package fr.omijica.atmo;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
-import java.io.IOException;
 
 public final class Atmo extends JavaPlugin {
 
@@ -22,43 +20,8 @@ public final class Atmo extends JavaPlugin {
             getDataFolder().mkdirs();
         }
 
-        //A CHANGE AVEC DES FICHIERS AVEC LIGNES DE COMMENTAIRES ET COPIER DEPUIS LE SRV
-        File file = new File(getDataFolder(), "area.yml");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                getLogger().severe("Unable to create the area.yml file !");
-                e.printStackTrace();
-            }
-        }
-        File file2 = new File(getDataFolder(), "ambient.yml");
-        if (!file2.exists()) {
-            try {
-                file2.createNewFile();
-            } catch (IOException e) {
-                getLogger().severe("Unable to create the ambient.yml file !");
-                e.printStackTrace();
-            }
-        }
-        File file3 = new File(getDataFolder(), "blockSound.yml");
-        if (!file3.exists()) {
-            try {
-                file3.createNewFile();
-            } catch (IOException e) {
-                getLogger().severe("Unable to create the ambient.yml file !");
-                e.printStackTrace();
-            }
-        }
-        File file4 = new File(getDataFolder(), "config.yml");
-        if (!file4.exists()) {
-            try {
-                file4.createNewFile();
-            } catch (IOException e) {
-                getLogger().severe("Unable to create the config.yml file !");
-                e.printStackTrace();
-            }
-        }
+        // Save default configuration files if they don't exist
+        saveDefaultFiles();
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
@@ -106,6 +69,16 @@ public final class Atmo extends JavaPlugin {
 
     public ZoneChecker getZoneChecker() {
         return this.zoneChecker;
+    }
+
+    private void saveDefaultFiles() {
+        String[] files = {"area.yml", "ambient.yml", "blockSound.yml", "config.yml"};
+        for (String fileName : files) {
+            File file = new File(getDataFolder(), fileName);
+            if (!file.exists()) {
+                saveResource(fileName, false);
+            }
+        }
     }
 
 }
