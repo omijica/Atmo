@@ -10,8 +10,9 @@ public final class Atmo extends JavaPlugin {
     private ZoneChecker zoneChecker;
     private AtmoMenu atmoMenu;
     private Ambient ambient;
-    private AmbientManager ambientManager;
+    private SoundManager ambientManager;
     private ConfigClass configClass;
+    private BlockSoundClass blockSoundClass;
 
     @Override
     public void onEnable() {
@@ -25,10 +26,11 @@ public final class Atmo extends JavaPlugin {
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
-        this.ambientManager = new AmbientManager(this);
+        this.ambientManager = new SoundManager(this);
         this.zoneListener = new ZoneListener(this, this.zoneChecker);
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
         this.configClass = new ConfigClass();
+        this.blockSoundClass = new BlockSoundClass();
 
         if (getCommand("atmo") != null) {
             AtmoCommand atmoCommand = new AtmoCommand(this, this.zoneChecker);
@@ -57,7 +59,7 @@ public final class Atmo extends JavaPlugin {
         return this.ambient;
     }
 
-    public AmbientManager getAmbientManager() {return this.ambientManager;}
+    public SoundManager getAmbientManager() {return this.ambientManager;}
 
     public ZoneListener getZoneListener() {
         return this.zoneListener;
@@ -70,6 +72,8 @@ public final class Atmo extends JavaPlugin {
     public ZoneChecker getZoneChecker() {
         return this.zoneChecker;
     }
+
+    public BlockSoundClass getBlockSoundClass() {return this.blockSoundClass;}
 
     private void saveDefaultFiles() {
         String[] files = {"area.yml", "ambient.yml", "blockSound.yml", "config.yml"};

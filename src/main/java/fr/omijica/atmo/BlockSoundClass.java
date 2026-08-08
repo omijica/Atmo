@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class blockSoundClass {
+public class BlockSoundClass {
 
     public record BlockEntry(
             String type,

@@ -15,7 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 // Gère les sons d'ambiance et la musique pour chaque joueur
-public class AmbientManager implements Listener {
+public class SoundManager implements Listener {
 
     private final Atmo plugin;
     private final Ambient ambient;
@@ -23,7 +23,7 @@ public class AmbientManager implements Listener {
     private ConfigClass.GeneralAreaData generalArea; // config générale (zone par défaut)
     private final Map<UUID, PlayerMusicState> states = new HashMap<>(); // état son/musique par joueur
 
-    public AmbientManager(Atmo plugin) {
+    public SoundManager(Atmo plugin) {
         this.plugin = plugin;
         this.ambient = plugin.getAmbient();
         this.ambiances = Ambient.load(plugin.getDataFolder());
