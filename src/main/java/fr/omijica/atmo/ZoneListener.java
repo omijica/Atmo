@@ -123,7 +123,7 @@ public class ZoneListener implements Listener {
             config.set(path + "music.name", "");
         }
         if (!config.contains(path + "music.volume")) {
-            config.set(path + "music.volume", 1);
+            config.set(path + "music.volume", 100);
         }
         if (!config.contains(path + "music.duration")) {
             config.set(path + "music.duration", "");
