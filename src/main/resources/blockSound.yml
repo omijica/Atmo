@@ -1,0 +1,38 @@
+blockSound:
+  blocks:
+    radio:
+      Type: ENTITY
+      Entity: ARMOR_STAND
+      entity: ARMOR_STAND
+      block: null
+      customModelData: 5
+
+      radius: 5
+      sound: "minecraft:block.note_block.chime"
+
+      chance: 0.3
+      min_delay: 30
+      max_delay: 70
+      volume: 0.4
+      pitchVariation: 0.2
+      pitchBase: 1.0
+
+      enabled: true
+
+  positions: # ex: /atmo addloc voices
+    voices:
+      sound: "minecraft:ambient.cave"
+      radius: 5
+
+      chance: 0.3
+      min_delay: 30
+      max_delay: 70
+      volume: 0.4
+      pitchVariation: 0.2
+      pitchBase: 1.0
+
+      enabled: true
+
+      locations:
+        - "world, 100, 60, 100"
+        - "world, 100, 60, 110"
