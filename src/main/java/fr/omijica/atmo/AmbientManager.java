@@ -19,12 +19,14 @@ public class AmbientManager implements Listener {
     private final Atmo plugin;
     private final Ambient ambient;
     private Map<String, Ambient.AmbientData> ambiances;
+    private ConfigClass.GeneralAreaData generalArea;
     private final Map<UUID, PlayerMusicState> states = new HashMap<>();
 
     public AmbientManager(Atmo plugin) {
         this.plugin = plugin;
         this.ambient = plugin.getAmbient();
         this.ambiances = Ambient.load(plugin.getDataFolder());
+        this.generalArea = plugin.getConfigClass().load(plugin.getDataFolder());
     }
 
     private static class PlayerMusicState {
@@ -55,6 +57,7 @@ public class AmbientManager implements Listener {
         }
         states.clear();
         this.ambiances = Ambient.load(plugin.getDataFolder());
+        this.generalArea = ConfigClass.load(plugin.getDataFolder());
     }
 
     private void handlePlayer(Player player) {
@@ -62,29 +65,26 @@ public class AmbientManager implements Listener {
         UUID uuid = player.getUniqueId();
         PlayerMusicState state = states.computeIfAbsent(uuid, k -> new PlayerMusicState());
 
-        if (zone == null) {
-            stopAll(player, state);
-            return;
-        }
-
-        if (zone.getMusicEnabled() && zone.getMusicName() != null) {
+        if (isMusicEnabledEffective(zone)) {
             handleMusic(player, zone, state);
+        } else {
+            stopMusic(player, state);
         }
 
-        if (zone.getAmbientEnabled()) {
-            String zoneAmbientName = (zone != null && zone.getAmbientEnabled()) ? zone.getAmbientName() : null;
-            if (!Objects.equals(state.currentAmbientName, zoneAmbientName)) {
+        if (isAmbientEnabledEffective(zone)) {
+            String ambientName = getAmbientNameEffective(zone);
+            if (!Objects.equals(state.currentAmbientName, ambientName)) {
 
                 if (state.playingSound != null) {
                     player.stopSound(state.playingSound);
                     state.playingSound = null;
                 }
-                state.currentAmbientName = zoneAmbientName;
+                state.currentAmbientName = ambientName;
                 state.backgroundCooldown = 0;
                 state.randomCooldowns.clear();
             }
 
-            Ambient.AmbientData data = ambiances.get(zoneAmbientName);
+            Ambient.AmbientData data = ambiances.get(ambientName);
             if (data == null) {
                 return;
             }
@@ -116,47 +116,35 @@ public class AmbientManager implements Listener {
                 }
                 state.randomCooldowns.put(sound.sound(), cooldown);
             }
+        } else {
+            stopAmbient(player, state); // voir étape 5bis
         }
     }
 
     private void handleMusic(Player player, ZoneClass zone, PlayerMusicState state) {
-        String zoneMusicName = zone.getMusicName();
+        String musicName = getMusicNameEffective(zone);
 
-        if (!Objects.equals(state.currentMusicName, zoneMusicName)) {
+        if (!Objects.equals(state.currentMusicName, musicName)) {
             if (state.playingMusicSound != null) {
                 player.stopSound(state.playingMusicSound, SoundCategory.RECORDS);
             }
-            state.currentMusicName = zoneMusicName;
+            state.currentMusicName = musicName;
             state.playingMusicSound = null;
             state.musicCooldown = 0;
         }
 
-        if (zoneMusicName == null) {
+        if (musicName == null || musicName.isEmpty()) {
             return;
         }
 
         state.musicCooldown -= 2;
 
         if (state.musicCooldown <= 0) {
-            float volume = zone.getMusicVolume() / 100f;
-            player.playSound(player.getLocation(), zoneMusicName, SoundCategory.RECORDS, volume, 1.0f);
+            float volume = getMusicVolumeEffective(zone) / 100f;
+            player.playSound(player.getLocation(), musicName, SoundCategory.RECORDS, volume, 1.0f);
 
-            state.playingMusicSound = zoneMusicName;
-            state.musicCooldown = zone.getMusicDuration();
-        }
-    }
-
-    private void stopAll(Player player, PlayerMusicState state) {
-        if (state == null) return;
-        if (state.playingSound != null) {
-            player.stopSound(state.playingSound);
-            state.playingSound = null;
-            state.currentAmbientName = null;
-        }
-        if (state.playingMusicSound != null) {
-            player.stopSound(state.playingMusicSound, SoundCategory.RECORDS);
-            state.playingMusicSound = null;
-            state.currentMusicName = null;
+            state.playingMusicSound = musicName;
+            state.musicCooldown = getMusicDurationEffective(zone);
         }
     }
 
@@ -179,5 +167,54 @@ public class AmbientManager implements Listener {
 
         stopAll(player,state);
         states.remove(player.getUniqueId());
+    }
+
+    // --- Ambiance ---
+    private boolean isAmbientEnabledEffective(ZoneClass zone) {
+        return zone != null ? zone.getAmbientEnabled() : generalArea.getAmbient().getEnabled();
+    }
+
+    private String getAmbientNameEffective(ZoneClass zone) {
+        return zone != null ? zone.getAmbientName() : generalArea.getAmbient().getName();
+    }
+
+    // --- Musique ---
+    private boolean isMusicEnabledEffective(ZoneClass zone) {
+        return zone != null ? zone.getMusicEnabled() : generalArea.getMusic().getEnabled();
+    }
+
+    private String getMusicNameEffective(ZoneClass zone) {
+        return zone != null ? zone.getMusicName() : generalArea.getMusic().getName();
+    }
+
+    private int getMusicVolumeEffective(ZoneClass zone) {
+        return zone != null ? zone.getMusicVolume() : generalArea.getMusic().getVolume();
+    }
+
+    private int getMusicDurationEffective(ZoneClass zone) {
+        return zone != null ? zone.getMusicDuration() : generalArea.getMusic().getDuration();
+    }
+
+    private void stopAmbient(Player player, PlayerMusicState state) {
+        if (state == null) return;
+        if (state.playingSound != null) {
+            player.stopSound(state.playingSound);
+            state.playingSound = null;
+            state.currentAmbientName = null;
+        }
+    }
+
+    private void stopMusic(Player player, PlayerMusicState state) {
+        if (state == null) return;
+        if (state.playingMusicSound != null) {
+            player.stopSound(state.playingMusicSound, SoundCategory.RECORDS);
+            state.playingMusicSound = null;
+            state.currentMusicName = null;
+        }
+    }
+
+    private void stopAll(Player player, PlayerMusicState state) {
+        stopAmbient(player, state);
+        stopMusic(player, state);
     }
 }

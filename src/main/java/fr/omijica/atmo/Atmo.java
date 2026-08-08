@@ -1,6 +1,7 @@
 package fr.omijica.atmo;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ public final class Atmo extends JavaPlugin {
     private AtmoMenu atmoMenu;
     private Ambient ambient;
     private AmbientManager ambientManager;
+    private ConfigClass configClass;
 
     @Override
     public void onEnable() {
@@ -48,12 +50,22 @@ public final class Atmo extends JavaPlugin {
                 e.printStackTrace();
             }
         }
+        File file4 = new File(getDataFolder(), "config.yml");
+        if (!file4.exists()) {
+            try {
+                file4.createNewFile();
+            } catch (IOException e) {
+                getLogger().severe("Unable to create the config.yml file !");
+                e.printStackTrace();
+            }
+        }
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
         this.ambientManager = new AmbientManager(this);
         this.zoneListener = new ZoneListener(this, this.zoneChecker);
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
+        this.configClass = new ConfigClass();
 
         if (getCommand("atmo") != null) {
             AtmoCommand atmoCommand = new AtmoCommand(this, this.zoneChecker);
@@ -75,6 +87,8 @@ public final class Atmo extends JavaPlugin {
     public void onDisable() {
         getLogger().info("AtmoPlugin disabled !");
     }
+
+    public ConfigClass getConfigClass() {return this.configClass;}
 
     public Ambient getAmbient() {
         return this.ambient;
