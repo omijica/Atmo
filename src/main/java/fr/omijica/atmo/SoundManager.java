@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-// Gère les sons d'ambiance et la musique pour chaque joueur
+// Gère les sons d'ambiance, la musique et le blockSound pour chaque joueur
 public class SoundManager implements Listener {
 
     private final Atmo plugin;
@@ -27,6 +27,7 @@ public class SoundManager implements Listener {
     private ConfigClass.GeneralAreaData generalArea; // config générale (zone par défaut)
     private final Map<UUID, PlayerMusicState> states = new HashMap<>(); // état son/musique par joueur
 
+    // Données du blockSound : sons liés à des entités détectées, et sons liés à des positions fixes
     private BlockSoundClass.BlockSoundData blockSoundData;
     private Map<String, BlockSoundClass.EntityEntry> blockSounds;
     private Map<String, BlockSoundClass.PositionEntry> positionSounds;
@@ -35,8 +36,8 @@ public class SoundManager implements Listener {
         this.plugin = plugin;
         this.ambient = plugin.getAmbient();
         this.ambiances = Ambient.load(plugin.getDataFolder());
-        this.generalArea = plugin.getConfigClass().load(plugin.getDataFolder());
-        this.blockSoundData = plugin.getBlockSoundClass().load(plugin.getDataFolder());
+        this.generalArea = ConfigClass.load(plugin.getDataFolder());
+        this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
         this.blockSounds = blockSoundData.getEntities();
         this.positionSounds = blockSoundData.getPositions();
     }
@@ -52,7 +53,9 @@ public class SoundManager implements Listener {
         int musicCooldown; // temps avant rejouer la musique
         String playingMusicSound; // musique en cours
 
-        Map<String, Integer> blockSoundCooldowns = new HashMap<>();
+        // Cooldowns du blockSound, par nom d'entrée (partagé entre "positions" et "blocks")
+        Map<String, Integer> positionCooldowns = new HashMap<>(); // cooldowns des "positions"
+        Map<String, Integer> entityCooldowns = new HashMap<>();   // cooldowns des "blocks"
     }
 
     // Lance la boucle qui met à jour les joueurs toutes les 2 secondes (40 ticks)
@@ -76,7 +79,11 @@ public class SoundManager implements Listener {
         states.clear();
         this.ambiances = Ambient.load(plugin.getDataFolder());
         this.generalArea = ConfigClass.load(plugin.getDataFolder());
-        this.blockSoundData = plugin.getBlockSoundClass().load(plugin.getDataFolder());
+
+        // appel statique direct, aligné sur le constructeur (au lieu de passer par une instance)
+        this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
+        this.blockSounds = blockSoundData.getEntities();
+        this.positionSounds = blockSoundData.getPositions();
     }
 
     public void stop() {
@@ -86,12 +93,13 @@ public class SoundManager implements Listener {
         }
     }
 
-    // Gère l'ambiance et la musique d'un joueur selon sa zone
+    // Gère l'ambiance, la musique et le blockSound d'un joueur selon sa zone
     private void handlePlayer(Player player) {
         ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player);
         UUID uuid = player.getUniqueId();
         PlayerMusicState state = states.computeIfAbsent(uuid, k -> new PlayerMusicState());
 
+        // Le blockSound est indépendant de la zone : une radio doit s'entendre partout
         handleBlockSounds(player, state);
 
         // Gestion de la musique
@@ -188,11 +196,13 @@ public class SoundManager implements Listener {
         }
     }
 
+    // Point d'entrée du blockSound : positions fixes puis entités détectées à proximité
     private void handleBlockSounds(Player player, PlayerMusicState state) {
         handlePositionsSounds(player, state);
         handleEntityEntries(player, state);
     }
 
+    // Gère les sons liés à des coordonnées fixes (ex: voix dans une grotte)
     private void handlePositionsSounds(Player player, PlayerMusicState state) {
         for (Map.Entry<String, BlockSoundClass.PositionEntry> entry : positionSounds.entrySet()) {
             String key = entry.getKey();
@@ -200,17 +210,19 @@ public class SoundManager implements Listener {
 
             if (!data.getEnabled()) continue;
 
-            int cooldown = state.blockSoundCooldowns.getOrDefault(key, 0) - 2;
+            // Cooldown par entrée : on décrémente de 2s (durée du tick) et on attend s'il n'est pas fini
+            int cooldown = state.positionCooldowns.getOrDefault(key, 0) - 2;
             if (cooldown > 0) {
-                state.blockSoundCooldowns.put(key, cooldown);
+                state.positionCooldowns.put(key, cooldown);
                 continue;
             }
 
+            // On cherche si le joueur est proche d'au moins une des positions listées
             Location matchedLocation = null;
 
             for (String rawLocation : data.getLocations()) {
                 Location target = parseLocation(rawLocation);
-                if (target == null || target.getWorld() != player.getWorld()) continue;
+                if (target == null || target.getWorld() != player.getWorld()) continue; // mondes différents = pas de calcul de distance possible
 
                 if (target.distance(player.getLocation()) <= data.getRadius()) {
                     matchedLocation = target;
@@ -218,16 +230,19 @@ public class SoundManager implements Listener {
                 }
             }
 
+            // Si une position correspond, on tente le son selon la "chance" configurée
             if (matchedLocation != null && Math.random() < data.getChance()) {
                 float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
-                player.playSound(matchedLocation, data.getSound(), (float) data.getVolume(), pitch);
+                player.playSound(matchedLocation, data.getSound(), (float) data.getVolume(), pitch); // joué depuis la position, pas depuis le joueur
             }
 
+            // Nouveau cooldown, qu'il y ait eu un son joué ou non
             int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
-            state.blockSoundCooldowns.put(key, nextCooldown);
+            state.positionCooldowns.put(key, nextCooldown);
         }
     }
 
+    // Gère les sons liés à des entités détectées autour du joueur (radio, furniture ItemsAdder...)
     private void handleEntityEntries(Player player, PlayerMusicState state) {
         for (Map.Entry<String, BlockSoundClass.EntityEntry> entry : blockSounds.entrySet()) {
             String key = entry.getKey();
@@ -235,9 +250,15 @@ public class SoundManager implements Listener {
 
             if (!data.getEnabled()) continue;
 
-            int cooldown = state.blockSoundCooldowns.getOrDefault(key, 0) - 2;
+            // si l'entrée dépend d'ItemsAdder mais que le plugin n'est pas là, on saute
+            // toute l'entrée avant même de scanner les entités à proximité (évite un scan pour rien)
+            if ("ITEMSADDER".equalsIgnoreCase(data.getType()) && !plugin.getItemsAdderEnabled()) {
+                continue;
+            }
+
+            int cooldown = state.entityCooldowns.getOrDefault(key, 0) - 2;
             if (cooldown > 0) {
-                state.blockSoundCooldowns.put(key, cooldown);
+                state.entityCooldowns.put(key, cooldown);
                 continue;
             }
 
@@ -245,40 +266,43 @@ public class SoundManager implements Listener {
 
             if (matchingEntity != null && Math.random() < data.getChance()) {
                 float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
-                player.playSound(matchingEntity.getLocation(), data.getSound(), (float) data.getVolume(), pitch);
+                player.playSound(matchingEntity.getLocation(), data.getSound(), (float) data.getVolume(), pitch); // joué depuis l'entité, pas depuis le joueur
             }
 
             int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
-            state.blockSoundCooldowns.put(key, nextCooldown);
+            state.entityCooldowns.put(key, nextCooldown);
         }
     }
 
+    // Cherche une entité proche du joueur qui correspond à l'entrée blockSound (vanilla ou ItemsAdder)
     private Entity isNearMatchingEntity(Player player, BlockSoundClass.EntityEntry data) {
         double r = data.getRadius();
 
-        for (Entity nearby : player.getNearbyEntities(r,r,r)) {
+        for (Entity nearby : player.getNearbyEntities(r, r, r)) {
 
             if ("ITEMSADDER".equalsIgnoreCase(data.getType())) {
-                if (!plugin.getItemsAdderEnabled()) continue;
-
+                // La vérification "itemsAdderEnabled" est déjà faite en amont dans handleEntityEntries
                 String furnitureId = ItemsAdderHook.getFurnitureId(nearby);
                 if (furnitureId != null && furnitureId.equalsIgnoreCase(data.getEntity())) {
                     return nearby;
                 }
-            } else {
 
+            } else {
+                // Cas vanilla : on compare le type d'entité, puis éventuellement le customModelData
                 if (!nearby.getType().name().equalsIgnoreCase(data.getEntity())) continue;
-                if (data.getCustomModelData() == 0) return nearby;
+                if (data.getCustomModelData() == 0) return nearby; // pas de modèle précis exigé, le type suffit
 
                 if (nearby instanceof ArmorStand standEntity) {
                     ItemStack helmet = standEntity.getEquipment().getHelmet();
-                    if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData() && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
+                    if (helmet != null && helmet.hasItemMeta()
+                            && helmet.getItemMeta().hasCustomModelData()
+                            && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
                         return nearby;
                     }
                 }
             }
         }
-        return null;
+        return null; // aucune entité correspondante trouvée à proximité
     }
 
     // Calcule une position aléatoire autour du joueur (pour les sons ambiants)
@@ -300,45 +324,38 @@ public class SoundManager implements Listener {
         Player player = event.getPlayer();
         PlayerMusicState state = states.get(player.getUniqueId());
 
-        stopAll(player,state);
+        stopAll(player, state);
         states.remove(player.getUniqueId());
     }
 
     // --- Ambiance ---
 
-    // Vérifie si l'ambiance est activée (zone ou config générale)
     private boolean isAmbientEnabledEffective(ZoneClass zone) {
         return zone != null ? zone.getAmbientEnabled() : generalArea.getAmbient().getEnabled();
     }
 
-    // Récupère le nom de l'ambiance active (zone ou config générale)
     private String getAmbientNameEffective(ZoneClass zone) {
         return zone != null ? zone.getAmbientName() : generalArea.getAmbient().getName();
     }
 
     // --- Musique ---
 
-    // Vérifie si la musique est activée (zone ou config générale)
     private boolean isMusicEnabledEffective(ZoneClass zone) {
         return zone != null ? zone.getMusicEnabled() : generalArea.getMusic().getEnabled();
     }
 
-    // Récupère le nom de la musique active (zone ou config générale)
     private String getMusicNameEffective(ZoneClass zone) {
         return zone != null ? zone.getMusicName() : generalArea.getMusic().getName();
     }
 
-    // Récupère le volume de la musique (zone ou config générale)
     private int getMusicVolumeEffective(ZoneClass zone) {
         return zone != null ? zone.getMusicVolume() : generalArea.getMusic().getVolume();
     }
 
-    // Récupère la durée de la musique (zone ou config générale)
     private int getMusicDurationEffective(ZoneClass zone) {
         return zone != null ? zone.getMusicDuration() : generalArea.getMusic().getDuration();
     }
 
-    // Arrête le son d'ambiance du joueur
     private void stopAmbient(Player player, PlayerMusicState state) {
         if (state == null) return;
         if (state.playingSound != null) {
@@ -348,7 +365,6 @@ public class SoundManager implements Listener {
         }
     }
 
-    // Arrête la musique du joueur
     private void stopMusic(Player player, PlayerMusicState state) {
         if (state == null) return;
         if (state.playingMusicSound != null) {
@@ -358,12 +374,12 @@ public class SoundManager implements Listener {
         }
     }
 
-    // Arrête tous les sons (ambiance + musique)
     private void stopAll(Player player, PlayerMusicState state) {
         stopAmbient(player, state);
         stopMusic(player, state);
     }
 
+    // Convertit une ligne "monde, x, y, z" du YAML en Location Bukkit exploitable
     private Location parseLocation(String raw) {
         String[] parts = raw.split(",");
         if (parts.length != 4) return null;

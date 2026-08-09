@@ -1,12 +1,17 @@
 package fr.omijica.atmo;
 
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class AtmoCommand implements CommandExecutor, TabExecutor {
@@ -14,10 +19,14 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
     private final Atmo plugin;
     private final ZoneChecker zoneChecker;
+    private Map<String, BlockSoundClass.PositionEntry> positionSounds;
+    private BlockSoundClass.BlockSoundData blockSoundData;
 
     public AtmoCommand(Atmo plugin, ZoneChecker zoneChecker) {
         this.plugin = plugin;
-        this.zoneChecker = zoneChecker; 
+        this.zoneChecker = zoneChecker;
+        this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
+        this.positionSounds = blockSoundData.getPositions();
     }
 
     @Override
@@ -81,6 +90,59 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 
+            case "addloc":
+                if (args.length < 2) {
+                    MessageUtils.sendError(player, "Usage: /atmo addloc <name>");
+                    return true;
+                }
+                String arg2 = args[1].toLowerCase();
+                if (positionSounds.containsKey(arg2)) {
+                    if (!plugin.getDataFolder().exists()) {
+                        plugin.getDataFolder().mkdirs();
+                    }
+
+                    File file = new File(plugin.getDataFolder(), "blockSound.yml");
+                    if (!file.exists()) {
+                        try {
+                            file.createNewFile();
+                        } catch (IOException e) {
+                            plugin.getLogger().severe("Unable to create the blockSound.yml file!");
+                            e.printStackTrace();
+                            return true;
+                        }
+                    }
+
+                    FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+                    String path = "blockSound.positions." + arg2 + ".locations";
+
+                    String playerLoc = serializeLocation(player.getLocation());
+                    List<String> locations = config.getStringList(path);
+                    locations.add(playerLoc);
+
+                    config.set(path, locations);
+
+                    try {
+                        config.save(file);
+                    } catch (IOException e) {
+                        plugin.getLogger().severe("Unable to save the location to blockSound.yml!");
+                        e.printStackTrace();
+                    }
+
+                    this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
+                    this.positionSounds = blockSoundData.getPositions();
+                    plugin.getSoundManager().reload();
+
+                    MessageUtils.sendSuccess(player, "Position added to '" + arg2 + "' !");
+
+                    break;
+
+                } else {
+                    MessageUtils.sendError(player, "This BlockSound name doesn't exist.");
+                    return true;
+                }
+
+
+
             /* case "test":
                 zoneChecker.getZones().clear();
                 for (int i = 1; i <= 100; i++) {
@@ -115,9 +177,21 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             }
 
             StringUtil.copyPartialMatches(args[0], subCommands, completions);
+        } else if (args.length == 2) {
+            List<String> subCommands = new ArrayList<>(positionSounds.keySet());
+            StringUtil.copyPartialMatches(args[0], subCommands, completions);
         }
 
         Collections.sort(completions);
         return completions;
+    }
+
+    private String serializeLocation(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
+
+        return loc.getWorld().getName() + ", " +
+                loc.getX() + ", " +
+                loc.getY() + ", " +
+                loc.getZ();
     }
 }
