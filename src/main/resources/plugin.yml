@@ -1,12 +1,13 @@
 name: Atmo
-version: '1.0.0'
+version: '1.0'
 main: fr.omijica.atmo.Atmo
 api-version: '1.20'
 authors: [ omijica ]
 website: omijica.fr
+softdepend: [ItemsAdder]
 
 commands:
   atmo:
-    description: Main control for managing background music.
+    description: Main command of Atmo Plugin.
     permission: atmo.use
     usage: /atmo

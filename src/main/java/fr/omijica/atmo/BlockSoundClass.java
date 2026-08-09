@@ -22,7 +22,8 @@ public class BlockSoundClass {
             double volume,
             double pitchVariation,
             double pitchBase,
-            boolean enabled
+            boolean enabled,
+            String type
     ) {
         public String getEntity() { return entity; }
         public int getCustomModelData() { return customModelData; }
@@ -35,6 +36,7 @@ public class BlockSoundClass {
         public double getPitchVariation() { return pitchVariation; }
         public double getPitchBase() { return pitchBase; }
         public boolean getEnabled() { return enabled; }
+        public String getType() {return type;}
     }
 
     public record PositionEntry(
@@ -93,10 +95,11 @@ public class BlockSoundClass {
                 double pitchVariation = entrySection.getDouble("pitchVariation", 0.0);
                 double pitchBase = entrySection.getDouble("pitchBase", 1.0);
                 boolean enabled = entrySection.getBoolean("enabled", false);
+                String type = entrySection.getString("type", "");
 
                 entities.put(key, new EntityEntry(
                         entity, customModelData, radius, sound,
-                        chance, minDelay, maxDelay, volume, pitchVariation, pitchBase, enabled
+                        chance, minDelay, maxDelay, volume, pitchVariation, pitchBase, enabled, type
                 ));
             }
         }

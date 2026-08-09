@@ -1,5 +1,6 @@
 package fr.omijica.atmo;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -13,6 +14,7 @@ public final class Atmo extends JavaPlugin {
     private SoundManager soundManager;
     private ConfigClass configClass;
     private BlockSoundClass blockSoundClass;
+    private boolean itemsAdderEnabled = false;
 
     @Override
     public void onEnable() {
@@ -23,6 +25,8 @@ public final class Atmo extends JavaPlugin {
 
         // Save default configuration files if they don't exist
         saveDefaultFiles();
+
+        itemsAdderEnabled = Bukkit.getPluginManager().isPluginEnabled("ItemsAdder");
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
@@ -53,6 +57,8 @@ public final class Atmo extends JavaPlugin {
         this.soundManager.stop();
         getLogger().info("AtmoPlugin disabled !");
     }
+
+    public boolean getItemsAdderEnabled() {return itemsAdderEnabled;}
 
     public ConfigClass getConfigClass() {return this.configClass;}
 

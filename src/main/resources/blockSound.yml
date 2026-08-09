@@ -1,7 +1,24 @@
 blockSound:
   entities:
     radio:
+      type: ENTITY
       entity: ARMOR_STAND
+      customModelData: 5
+
+      radius: 5
+      sound: "minecraft:block.note_block.chime"
+
+      chance: 0.3
+      min_delay: 30
+      max_delay: 70
+      volume: 0.4
+      pitchVariation: 0.2
+      pitchBase: 1.0
+
+      enabled: true
+    radio2:
+      type: ITEMSADDER
+      itemsAdderId: "lixar:radio"
       customModelData: 5
 
       radius: 5

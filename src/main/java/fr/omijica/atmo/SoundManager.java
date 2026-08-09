@@ -257,14 +257,24 @@ public class SoundManager implements Listener {
         double r = data.getRadius();
 
         for (Entity nearby : player.getNearbyEntities(r,r,r)) {
-            if (!nearby.getType().name().equalsIgnoreCase(data.getEntity())) continue;
 
-            if (data.getCustomModelData() == 0) return nearby;
+            if ("ITEMSADDER".equalsIgnoreCase(data.getType())) {
+                if (!plugin.getItemsAdderEnabled()) continue;
 
-            if (nearby instanceof ArmorStand standEntity) {
-                ItemStack helmet = standEntity.getEquipment().getHelmet();
-                if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData() && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
+                String furnitureId = ItemsAdderHook.getFurnitureId(nearby);
+                if (furnitureId != null && furnitureId.equalsIgnoreCase(data.getEntity())) {
                     return nearby;
+                }
+            } else {
+
+                if (!nearby.getType().name().equalsIgnoreCase(data.getEntity())) continue;
+                if (data.getCustomModelData() == 0) return nearby;
+
+                if (nearby instanceof ArmorStand standEntity) {
+                    ItemStack helmet = standEntity.getEquipment().getHelmet();
+                    if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData() && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
+                        return nearby;
+                    }
                 }
             }
         }
