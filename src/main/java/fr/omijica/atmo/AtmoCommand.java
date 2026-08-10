@@ -43,7 +43,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         }
 
         if (args.length == 0) {
-            MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload>");
+            MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc>");
             return true;
         }
 
@@ -153,7 +153,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 return true; */
 
             default:
-                MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload>");
+                MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc>");
                 break;
 
         }
@@ -170,7 +170,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info"));
+            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info", "addloc"));
 
             if (!player.hasPermission("atmo.reload")) {
                 subCommands.remove("reload");

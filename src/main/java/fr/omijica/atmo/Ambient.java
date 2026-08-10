@@ -12,19 +12,19 @@ import java.util.Map;
 public class Ambient {
 
     public record RandomSoundData (
-        String sound,
-        double chance,
-        int minDelay,
-        int maxDelay,
-        double volume,
-        boolean pitchVariation
+            String sound,
+            double chance,
+            int minDelay,
+            int maxDelay,
+            double volume,
+            boolean pitchVariation
     ) {}
 
     public record AmbientData(
-        String backgroundSound,
-        double backgroundVolume,
-        int backgroundInterval,
-        List<RandomSoundData> randomSounds
+            String backgroundSound,
+            double backgroundVolume,
+            int backgroundInterval,
+            List<RandomSoundData> randomSounds
     ) {}
 
     public static Map<String, AmbientData> load(File dataFolder) {
@@ -50,11 +50,11 @@ public class Ambient {
             List<Map<?, ?>> rawList = section.getMapList("random_sounds");
             for (Map<?, ?> map : rawList) {
                 String sound = (String) map.get("sound");
-                double chance = (double) map.get("chance");
-                int minDelay = (int) map.get("min_delay");
-                int maxDelay = (int) map.get("max_delay");
-                double volume = (double) map.get("volume");
-                boolean pitchVariation = (boolean) map.get("pitch_variation");
+                double chance = toDouble(map.get("chance"), 0.0);
+                int minDelay = toInt(map.get("min_delay"), 0);
+                int maxDelay = toInt(map.get("max_delay"), 0);
+                double volume = toDouble(map.get("volume"), 1.0);
+                boolean pitchVariation = toBoolean(map.get("pitch_variation"), false);
 
                 randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation));
             }
@@ -63,5 +63,29 @@ public class Ambient {
         }
 
         return ambiances;
+    }
+
+    // Convertit n'importe quel Number YAML (Integer, Double, Long...) en double, avec une valeur par défaut si absent/invalide
+    private static double toDouble(Object raw, double defaultValue) {
+        if (raw instanceof Number number) {
+            return number.doubleValue();
+        }
+        return defaultValue;
+    }
+
+    // Convertit n'importe quel Number YAML en int, avec une valeur par défaut si absent/invalide
+    private static int toInt(Object raw, int defaultValue) {
+        if (raw instanceof Number number) {
+            return number.intValue();
+        }
+        return defaultValue;
+    }
+
+    // Convertit en boolean, avec une valeur par défaut si absent/invalide
+    private static boolean toBoolean(Object raw, boolean defaultValue) {
+        if (raw instanceof Boolean bool) {
+            return bool;
+        }
+        return defaultValue;
     }
 }
