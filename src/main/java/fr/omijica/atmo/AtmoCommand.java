@@ -43,7 +43,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         }
 
         if (args.length == 0) {
-            MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc>");
+            MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc|music|ambient>");
             return true;
         }
 
@@ -141,6 +141,32 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
+            case "music":
+                boolean current = AtmoPlayerData.isMusicEnabled(player);
+                boolean newValue = !current;
+
+                AtmoPlayerData.setMusicEnabled(player, newValue);
+
+                if (newValue) {
+                    MessageUtils.sendInfo(player, "Background music disabled !");
+                } else {
+                    MessageUtils.sendSuccess(player, "Background music enabled.");
+                }
+                break;
+
+            case "ambient":
+                boolean current2 = AtmoPlayerData.isAmbientEnabled(player);
+                boolean newValue2 = !current2;
+
+                AtmoPlayerData.setAmbientEnabled(player, newValue2);
+
+                if (newValue2) {
+                    MessageUtils.sendInfo(player, "Ambient sounds disabled !");
+                } else {
+                    MessageUtils.sendSuccess(player, "Ambient sounds enabled.");
+                }
+                break;
+
 
 
             /* case "test":
@@ -153,7 +179,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 return true; */
 
             default:
-                MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc>");
+                MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc|music|ambient>");
                 break;
 
         }
@@ -170,7 +196,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info", "addloc"));
+            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info", "addloc", "music", "ambient"));
 
             if (!player.hasPermission("atmo.reload")) {
                 subCommands.remove("reload");

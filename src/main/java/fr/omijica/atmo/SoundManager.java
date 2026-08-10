@@ -70,9 +70,9 @@ public class SoundManager implements Listener {
         String currentZoneName;
     }
 
-    // Lance la boucle qui met à jour les joueurs toutes les 2 secondes (40 ticks)
+    // Lance la boucle qui met à jour les joueurs toutes les secondes
     public void start() {
-        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 0L, 40L);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 0L, 20L);
     }
 
     // Appelée à chaque tick de la boucle, traite tous les joueurs en ligne
@@ -100,6 +100,7 @@ public class SoundManager implements Listener {
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerMusicState state = states.get(player.getUniqueId());
             stopAll(player, state);
+            states.clear();
         }
     }
 
@@ -112,7 +113,6 @@ public class SoundManager implements Listener {
         // Si la zone a changé depuis le dernier tick (téléportation, marche rapide...),
         String zoneName = zone != null ? zone.getName() : null;
         if (!Objects.equals(state.currentZoneName, zoneName)) {
-            stopAllBlockSounds(player, state);
             state.currentZoneName = zoneName;
         }
 
@@ -127,6 +127,12 @@ public class SoundManager implements Listener {
         }
 
         // Gestion de l'ambiance sonore
+
+        if (AtmoPlayerData.isAmbientEnabled(player)) {
+            stopAmbient(player, state);
+            return; // le joueur a désactivé l'ambiance'
+        }
+
         if (isAmbientEnabledEffective(zone)) {
             String ambientName = getAmbientNameEffective(zone);
 
@@ -148,7 +154,7 @@ public class SoundManager implements Listener {
                 return; // ambiance inconnue, on arrête ici
             }
 
-            state.backgroundCooldown -= 2; // on décompte le temps (2 secondes par tick)
+            state.backgroundCooldown -= 1; // on décompte le temps (1 seconde par tick)
 
             // Rejoue le son de fond quand le cooldown est fini
             if (state.backgroundCooldown <= 0) {
@@ -164,7 +170,7 @@ public class SoundManager implements Listener {
             // Gestion des sons aléatoires (oiseaux, bruits, etc.)
             for (Ambient.RandomSoundData sound : data.randomSounds()) {
                 int cooldown = state.randomCooldowns.getOrDefault(sound.sound(), 0);
-                cooldown -= 2;
+                cooldown -= 1;
 
                 if (cooldown <= 0) {
                     // Le son a une chance de se jouer
@@ -176,7 +182,9 @@ public class SoundManager implements Listener {
                         state.playingRandomSounds.add(sound.sound()); // on retient ce son pour pouvoir le couper
                     }
                     // Nouveau délai aléatoire avant le prochain essai
-                    cooldown = ThreadLocalRandom.current().nextInt(sound.minDelay(), sound.maxDelay() + 1);
+                    int min = Math.min(sound.minDelay(), sound.maxDelay());
+                    int max = Math.max(sound.minDelay(), sound.maxDelay());
+                    cooldown = ThreadLocalRandom.current().nextInt(min, max + 1);
                 }
                 state.randomCooldowns.put(sound.sound(), cooldown);
             }
@@ -187,6 +195,11 @@ public class SoundManager implements Listener {
 
     // Gère la lecture de la musique pour un joueur
     private void handleMusic(Player player, ZoneClass zone, PlayerMusicState state) {
+        if (AtmoPlayerData.isMusicEnabled(player)) {
+            stopMusic(player, state);
+            return; // le joueur a désactivé la musique
+        }
+
         String musicName = getMusicNameEffective(zone);
 
         // Si la musique a changé, on coupe l'ancienne
@@ -203,7 +216,7 @@ public class SoundManager implements Listener {
             return; // pas de musique définie
         }
 
-        state.musicCooldown -= 2; // décompte du temps
+        state.musicCooldown -= 1; // décompte du temps
 
         // Rejoue la musique quand le cooldown est fini
         if (state.musicCooldown <= 0) {
@@ -252,8 +265,8 @@ public class SoundManager implements Listener {
                 continue;
             }
 
-            // Cooldown par entrée : on décrémente de 2s (durée du tick) et on attend s'il n'est pas fini
-            int cooldown = state.positionCooldowns.getOrDefault(key, 0) - 2;
+            // Cooldown par entrée : on décrémente de 1s (durée du tick) et on attend s'il n'est pas fini
+            int cooldown = state.positionCooldowns.getOrDefault(key, 0) - 1;
             if (cooldown > 0) {
                 state.positionCooldowns.put(key, cooldown);
                 continue;
@@ -267,7 +280,9 @@ public class SoundManager implements Listener {
             }
 
             // Nouveau cooldown, qu'il y ait eu un son joué ou non
-            int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
+            int min = Math.min(data.getMinDelay(), data.getMaxDelay());
+            int max = Math.max(data.getMinDelay(), data.getMaxDelay());
+            int nextCooldown = ThreadLocalRandom.current().nextInt(min, max + 1);
             state.positionCooldowns.put(key, nextCooldown);
         }
     }
@@ -307,7 +322,7 @@ public class SoundManager implements Listener {
                 continue;
             }
 
-            int cooldown = state.entityCooldowns.getOrDefault(key, 0) - 2;
+            int cooldown = state.entityCooldowns.getOrDefault(key, 0) - 1;
             if (cooldown > 0) {
                 state.entityCooldowns.put(key, cooldown);
                 continue;
@@ -319,7 +334,9 @@ public class SoundManager implements Listener {
                 state.playingEntitySounds.put(key, data.getSound());
             }
 
-            int nextCooldown = ThreadLocalRandom.current().nextInt(data.getMinDelay(), data.getMaxDelay() + 1);
+            int min = Math.min(data.getMinDelay(), data.getMaxDelay());
+            int max = Math.max(data.getMinDelay(), data.getMaxDelay());
+            int nextCooldown = ThreadLocalRandom.current().nextInt(min, max + 1);
             state.entityCooldowns.put(key, nextCooldown);
         }
     }
@@ -435,6 +452,8 @@ public class SoundManager implements Listener {
             state.currentAmbientName = null;
         }
         stopRandomSounds(player, state);
+        state.playingRandomSounds.clear();
+
     }
 
     // Coupe tous les sons aléatoires actuellement en cours pour ce joueur (utile pour les sons en boucle)

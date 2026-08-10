@@ -35,6 +35,7 @@ public final class Atmo extends JavaPlugin {
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
         this.configClass = new ConfigClass();
         this.blockSoundClass = new BlockSoundClass();
+        AtmoPlayerData.init(this);
 
         if (getCommand("atmo") != null) {
             AtmoCommand atmoCommand = new AtmoCommand(this, this.zoneChecker);
