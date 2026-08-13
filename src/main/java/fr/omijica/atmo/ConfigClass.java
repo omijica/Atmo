@@ -60,4 +60,28 @@ public class ConfigClass {
                 new MusicSettings(musicEnabled, musicName, musicVolume, musicDuration)
         );
     }
+
+    public static GeneralConfigData loadBaseConfig(File dataFolder) {
+        File file = new File(dataFolder, "config.yml");
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        ConfigurationSection section = config.getConfigurationSection("config.default");
+
+        if (section == null) {
+            return new GeneralConfigData(true, true);
+        }
+
+        boolean allowPlayerDisableMusic = section.getBoolean("AllowPlayerDisableMusic", true);
+        boolean allowPlayerDisableAmbient = section.getBoolean("AllowPlayerDisableAmbient", true);
+
+        return new GeneralConfigData(allowPlayerDisableMusic, allowPlayerDisableAmbient);
+    }
+
+    public record GeneralConfigData(
+            boolean allowPlayerDisableMusic,
+            boolean allowPlayerDisableAmbient
+    ) {
+        public boolean getAllowPlayerDisableMusic() { return allowPlayerDisableMusic; }
+        public boolean getAllowPlayerDisableAmbient() { return allowPlayerDisableAmbient; }
+    }
 }

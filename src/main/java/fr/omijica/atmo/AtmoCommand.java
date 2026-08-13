@@ -21,12 +21,14 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
     private final ZoneChecker zoneChecker;
     private Map<String, BlockSoundClass.PositionEntry> positionSounds;
     private BlockSoundClass.BlockSoundData blockSoundData;
+    private ConfigClass.GeneralConfigData generalConfigData;
 
     public AtmoCommand(Atmo plugin, ZoneChecker zoneChecker) {
         this.plugin = plugin;
         this.zoneChecker = zoneChecker;
         this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
         this.positionSounds = blockSoundData.getPositions();
+        this.generalConfigData = plugin.getConfigClass().loadBaseConfig(plugin.getDataFolder());
     }
 
     @Override
@@ -37,13 +39,15 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             return true;
         }
 
-        if (!player.hasPermission("atmo.use")) {
-            MessageUtils.sendError(player, "You do not have permission to use this command.");
-            return true;
+        if (!player.hasPermission("atmo.admin")) {
+            if (!player.hasPermission("atmo.use")) {
+                MessageUtils.sendError(player, "You do not have permission to use this command.");
+                return true;
+            }
         }
 
         if (args.length == 0) {
-            MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc|music|ambient>");
+            sendUsage(player);
             return true;
         }
 
@@ -52,11 +56,23 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         switch (arg1) {
 
             case "menu":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.menu")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
+                }
                 AtmoMenu.openMenu(player);
                 MessageUtils.playClick(player);
                 break;
 
             case "editor":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.editor")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
+                }
                 UUID uuid = player.getUniqueId();
 
                 if (activeSessions.containsKey(uuid)) {
@@ -70,6 +86,12 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 break;
 
             case "info":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.info")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
+                }
                 ZoneClass zone = zoneChecker.getPlayerZone(player);
                 if (zone == null) {
                     MessageUtils.sendError(player, "You are not in any zone.");
@@ -80,17 +102,27 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 break;
 
             case "reload":
-                if (!player.hasPermission("atmo.reload")) {
-                    MessageUtils.sendError(player, "You do not have permission to use this command.");
-                    return true;
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.reload")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
                 }
-
                 zoneChecker.loadZones(plugin.getDataFolder());
                 plugin.getSoundManager().reload();
+                this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
+                this.positionSounds = blockSoundData.getPositions();
+                this.generalConfigData = plugin.getConfigClass().loadBaseConfig(plugin.getDataFolder());
                 MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 
             case "addloc":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.addloc")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
+                }
                 if (args.length < 2) {
                     MessageUtils.sendError(player, "Usage: /atmo addloc <name>");
                     return true;
@@ -142,6 +174,15 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 }
 
             case "music":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.music")) {
+                        if (!generalConfigData.getAllowPlayerDisableMusic()) {
+                            MessageUtils.sendError(player, "You do not have permission to use this command.");
+                            return true;
+                        }
+                    }
+                }
+
                 boolean current = AtmoPlayerData.isMusicEnabled(player);
                 boolean newValue = !current;
 
@@ -155,6 +196,15 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 break;
 
             case "ambient":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.ambient")) {
+                        if (!generalConfigData.getAllowPlayerDisableAmbient()) {
+                            MessageUtils.sendError(player, "You do not have permission to use this command.");
+                            return true;
+                        }
+                    }
+                }
+
                 boolean current2 = AtmoPlayerData.isAmbientEnabled(player);
                 boolean newValue2 = !current2;
 
@@ -167,19 +217,8 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 }
                 break;
 
-
-
-            /* case "test":
-                zoneChecker.getZones().clear();
-                for (int i = 1; i <= 100; i++) {
-                    zoneChecker.getZones().add(new ZoneClass("Zone #" + i, "world", i * 10, 64, i * 10, i * 10 + 5, 70, i * 10 + 5, i, "test", false));
-                }
-
-                plugin.getAtmoMenu().openPaperMenu(player, 0);
-                return true; */
-
             default:
-                MessageUtils.sendInfo(player, "Usage: /atmo <menu|editor|info|reload|addloc|music|ambient>");
+                sendUsage(player);
                 break;
 
         }
@@ -196,20 +235,59 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> subCommands = new ArrayList<>(List.of("menu", "editor", "reload", "info", "addloc", "music", "ambient"));
+            List<String> subCommands = getAvailableSubCommands(player);
+            StringUtil.copyPartialMatches(args[0], subCommands, completions);
 
-            if (!player.hasPermission("atmo.reload")) {
-                subCommands.remove("reload");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("addloc")) {
+            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.addloc")) {
+                List<String> subCommands = new ArrayList<>(positionSounds.keySet());
+                StringUtil.copyPartialMatches(args[1], subCommands, completions);
             }
-
-            StringUtil.copyPartialMatches(args[0], subCommands, completions);
-        } else if (args.length == 2) {
-            List<String> subCommands = new ArrayList<>(positionSounds.keySet());
-            StringUtil.copyPartialMatches(args[0], subCommands, completions);
         }
 
         Collections.sort(completions);
         return completions;
+    }
+
+    private List<String> getAvailableSubCommands(Player player) {
+        List<String> subCommands = new ArrayList<>();
+
+        boolean isAdmin = player.hasPermission("atmo.admin");
+
+        if (isAdmin || player.hasPermission("atmo.menu")) {
+            subCommands.add("menu");
+        }
+        if (isAdmin || player.hasPermission("atmo.editor")) {
+            subCommands.add("editor");
+        }
+        if (isAdmin || player.hasPermission("atmo.info")) {
+            subCommands.add("info");
+        }
+        if (isAdmin || player.hasPermission("atmo.reload")) {
+            subCommands.add("reload");
+        }
+        if (isAdmin || player.hasPermission("atmo.addloc")) {
+            subCommands.add("addloc");
+        }
+        if (isAdmin || player.hasPermission("atmo.music") || generalConfigData.getAllowPlayerDisableMusic()) {
+            subCommands.add("music");
+        }
+        if (isAdmin || player.hasPermission("atmo.ambient") || generalConfigData.getAllowPlayerDisableAmbient()) {
+            subCommands.add("ambient");
+        }
+
+        return subCommands;
+    }
+
+    private void sendUsage(Player player) {
+        List<String> available = getAvailableSubCommands(player);
+
+        if (available.isEmpty()) {
+            MessageUtils.sendError(player, "You do not have permission to use any /atmo subcommand.");
+            return;
+        }
+
+        MessageUtils.sendInfo(player, "Usage: /atmo <" + String.join("|", available) + ">");
     }
 
     private String serializeLocation(Location loc) {

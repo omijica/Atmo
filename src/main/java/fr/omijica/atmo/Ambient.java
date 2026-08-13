@@ -17,7 +17,8 @@ public class Ambient {
             int minDelay,
             int maxDelay,
             double volume,
-            boolean pitchVariation
+            double pitchVariation,
+            double pitchBase
     ) {}
 
     public record AmbientData(
@@ -54,9 +55,10 @@ public class Ambient {
                 int minDelay = toInt(map.get("min_delay"), 0);
                 int maxDelay = toInt(map.get("max_delay"), 0);
                 double volume = toDouble(map.get("volume"), 1.0);
-                boolean pitchVariation = toBoolean(map.get("pitch_variation"), false);
+                double pitchVariation = toDouble(map.get("pitch_variation"), 0.0);
+                double pitchBase = toDouble(map.get("pitch_base"), 1.0);
 
-                randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation));
+                randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation, pitchBase));
             }
 
             ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, List.copyOf(randomSounds)));

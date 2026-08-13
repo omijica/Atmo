@@ -21,11 +21,15 @@ field:
       max_delay: 50
       # Volume of the random sound
       volume: 0.5
-      # Whether to slightly randomize the pitch
-      pitch_variation: true
+      # Base pitch for playback (1.0 = normal speed/pitch).
+      pitch_base: 1.0
+      # Maximum random variation added or subtracted from pitchBase.
+      # Resulting pitch formula: pitchBase + random(-pitchVariation, +pitchVariation) (0 to disable)
+      pitch_variation: 0.2
     - sound: "minecraft:entity.bird.ambient"
       chance: 0.3
       min_delay: 30
       max_delay: 70
       volume: 0.4
-      pitch_variation: true
+      pitch_base: 1.0
+      pitch_variation: 0.2

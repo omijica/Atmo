@@ -1,5 +1,9 @@
 # General configuration for Atmo plugin
 config:
+  default:
+    AllowPlayerDisableMusic: true
+    AllowPlayerDisableAmbient: true
+
   # Default settings for the general area (when not in a specific zone)
   general_area:
     ambient:
