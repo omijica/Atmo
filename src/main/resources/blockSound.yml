@@ -1,5 +1,5 @@
 # ==============================================================================
-#                              Atmo - blocksound.yml
+#                              Atmo - blockSound.yml
 # ==============================================================================
 # This configuration file manages block-bound and position-bound spatial audio.
 # BlockSound allows sounds to play dynamically near entities (such as Armor Stands
@@ -10,45 +10,46 @@ blockSound:
 
   # ----------------------------------------------------------------------------
   # ENTITIES SECTION
-  # Detects nearby entities around the player and plays ambient sounds from them.
+  # Detects entities near the player and plays a sound as if it came from them.
+  # Useful for props like radios, campfires, or custom furniture.
   # ----------------------------------------------------------------------------
   entities:
-    # Example 1: Vanilla Armor Stand with CustomModelData
+
+    # Example 1: a vanilla Armor Stand identified by CustomModelData.
     radio:
       # Detection type:
-      # - ENTITY: Standard Minecraft Bukkit entity check.
-      # - ITEMSADDER: Custom furniture item check using the ItemsAdder plugin.
+      # - ENTITY:      standard Bukkit entity check.
+      # - ITEMSADDER:  custom furniture check using the ItemsAdder plugin.
       type: "ENTITY"
-      # Bukkit EntityType name (e.g., ARMOR_STAND, ITEM_FRAME, VILLAGER).
+      # Bukkit EntityType name (e.g. ARMOR_STAND, ITEM_FRAME, VILLAGER).
       entity: "ARMOR_STAND"
-      # CustomModelData on the entity's helmet item (0 disables this filter).
+      # CustomModelData on the entity's helmet item (0 to disable this filter).
       customModelData: 5
       # Detection radius in blocks around the player.
       radius: 5.0
-      # Sound key to play (Minecraft sound or custom resource pack sound).
+      # Sound key to play (vanilla Minecraft sound or custom resource pack sound).
       sound: "minecraft:block.note_block.chime"
-      # Probability of playing the sound when delay expires (0.0 to 1.0).
+      # Chance of playing the sound when the delay expires (0.0 to 1.0).
       chance: 0.3
-      # Minimum delay in seconds before triggering another play check.
+      # Minimum delay in seconds before the next play check.
       min_delay: 30
-      # Maximum delay in seconds before triggering another play check.
+      # Maximum delay in seconds before the next play check.
       max_delay: 70
-      # Sound volume multiplier (1.0 = normal volume).
+      # Playback volume multiplier (1.0 = normal volume).
       volume: 0.4
       # Base pitch for playback (1.0 = normal speed/pitch).
       pitchBase: 1.0
-      # Maximum random variation added or subtracted from pitchBase.
-      # Resulting pitch formula: pitchBase + random(-pitchVariation, +pitchVariation) (0 to disable)
+      # Maximum random variation added to or subtracted from pitchBase.
+      # Resulting pitch = pitchBase +/- random(0, pitchVariation). Set to 0 to disable.
       pitchVariation: 0.2
       # Enable or disable this entity entry.
       enabled: true
 
-    # Example 2: ItemsAdder Furniture Entity
+    # Example 2: an ItemsAdder furniture entity.
     radio2:
       type: "ITEMSADDER"
       # ItemsAdder furniture identifier (namespace:id).
-      entity: "lixar:radio"
-
+      entity: "atmo:radio"
       radius: 5.0
       sound: "minecraft:block.note_block.chime"
       chance: 0.3
@@ -61,30 +62,33 @@ blockSound:
 
   # ----------------------------------------------------------------------------
   # POSITIONS SECTION
-  # Plays spatial sounds from fixed coordinates in the world when players enter radius.
+  # Plays spatial sounds from fixed coordinates, triggered when a player
+  # enters the radius around one of the listed locations.
   # ----------------------------------------------------------------------------
   positions:
-    # Example entry name for position-based sounds (e.g. ambient cave voices)
+
+    # Example entry: ambient cave voices at a fixed location.
     voices:
       # Sound key to play.
       sound: "minecraft:ambient.cave"
-      # Distance threshold in blocks from target location to trigger audio.
+      # Distance in blocks from the location that triggers the sound.
       radius: 5.0
-      # Chance (0.0 to 1.0) to trigger per interval check.
+      # Chance of playing per interval check (0.0 to 1.0).
       chance: 0.3
-      # Minimum interval delay (in seconds) between play checks.
+      # Minimum delay in seconds before the next play check.
       min_delay: 30
-      # Maximum interval delay (in seconds) between play checks.
+      # Maximum delay in seconds before the next play check.
       max_delay: 70
-      # Audio playback volume.
+      # Playback volume.
       volume: 0.4
-      # Base pitch.
+      # Base pitch for playback (1.0 = normal speed/pitch).
       pitchBase: 1.0
-      # Pitch variation width.
+      # Maximum random variation added to or subtracted from pitchBase.
       pitchVariation: 0.2
       # Enable or disable this position entry.
       enabled: true
-      # Target coordinates formatted as: "world_name, x, y, z" You can add them using /atmo addloc <name>
+      # Target coordinates, formatted as "world_name, x, y, z".
+      # Add new ones in-game with /atmo addloc <name>.
       locations:
-        - "world, 100, 60, 100"
-        - "world, 100, 60, 110"
+        - world, 100, 60, 100
+        - world, 100, 60, 110

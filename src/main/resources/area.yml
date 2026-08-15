@@ -1,30 +1,40 @@
-# Configuration for Areas/Zones
-# Each area can have its own ambient settings and boundaries.
+# ==============================================================================
+#                               Atmo - area.yml
+# ==============================================================================
+# This configuration file defines custom areas (zones) in your worlds.
+# Each area is a cuboid region bound by two corner positions, and can
+# override the ambient sound and background music played inside it.
+# Zones can be created in-game with /atmo area create.
+# ==============================================================================
+
 # Example:
 # areas:
 #   spawn:
+#     # World this area belongs to.
 #     world: world
+#     # First corner of the cuboid region.
 #     pos1:
 #       x: 100
 #       y: 60
 #       z: 100
+#     # Second corner of the cuboid region.
 #     pos2:
 #       x: 200
 #       y: 80
 #       z: 200
 #     ambient:
-#       # Whether ambient sounds are enabled globally
+#       # Whether ambient sounds are enabled inside this area.
 #       enabled: true
-#       # The default ambient profile to use (defined in ambient.yml)
+#       # Ambient profile to use, as defined in ambient.yml.
 #       name: field
-#    music:
-#       # Whether background music is enabled
+#     music:
+#       # Whether background music is enabled inside this area.
 #       enabled: true
-#       # The sound name for music
+#       # Sound key played as background music.
 #       name: "minecraft:custom.musc"
-#       # Volume level (0-100)
+#       # Playback volume (0-100).
 #       volume: 50
-#       # Duration of the music track in seconds
+#       # Track duration in seconds, used to schedule the next loop.
 #       duration: 300
 
 areas: {}

@@ -1,31 +1,43 @@
-# Ambient sound configurations
-# You can define different ambient profiles here.
-# 'field' is an example profile name.
+# ==============================================================================
+#                              Atmo - ambient.yml
+# ==============================================================================
+# This configuration file defines ambient sound profiles.
+# An ambient profile combines a looping background sound with a set of
+# random one-shot sounds, giving each zone its own distinct atmosphere.
+# Profiles are referenced by name from area.yml and config.yml.
+# ==============================================================================
 
+# Example profile, named "field".
 field:
-  # The background sound that loops
+  # Sound key played on loop as the background of this profile.
   background_sound: "minecraft:music.menu"
-  # Volume of the background sound (0.0 to 1.0)
+  # Volume of the background sound (0.0 to 1.0).
   background_volume: 0.5
-  # Interval in seconds between background sound repeats
+  # Interval in seconds between each loop of the background sound.
   background_interval: 10
 
-  # List of random sounds that can play in this ambient profile
+  # --------------------------------------------------------------------------
+  # RANDOM SOUNDS
+  # A pool of extra sounds that can randomly play on top of the background,
+  # to make the ambience feel alive and less repetitive.
+  # --------------------------------------------------------------------------
   random_sounds:
-    - sound: "minecraft:ambient.cave"
-      # Chance of playing (0.0 to 1.0)
+    - # Sound key to play.
+      sound: "minecraft:ambient.cave"
+      # Chance of playing when the delay expires (0.0 to 1.0).
       chance: 0.4
-      # Minimum delay in seconds before playing again
+      # Minimum delay in seconds before this sound can play again.
       min_delay: 20
-      # Maximum delay in seconds before playing again
+      # Maximum delay in seconds before this sound can play again.
       max_delay: 50
-      # Volume of the random sound
+      # Playback volume.
       volume: 0.5
       # Base pitch for playback (1.0 = normal speed/pitch).
       pitch_base: 1.0
-      # Maximum random variation added or subtracted from pitchBase.
-      # Resulting pitch formula: pitchBase + random(-pitchVariation, +pitchVariation) (0 to disable)
+      # Maximum random variation added to or subtracted from pitch_base.
+      # Resulting pitch = pitch_base +/- random(0, pitch_variation). Set to 0 to disable.
       pitch_variation: 0.2
+
     - sound: "minecraft:entity.bird.ambient"
       chance: 0.3
       min_delay: 30

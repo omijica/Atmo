@@ -1,24 +1,45 @@
-# General configuration for Atmo plugin
+# ==============================================================================
+#                              Atmo - config.yml
+# ==============================================================================
+# General configuration file for the Atmo plugin.
+# This file controls global player permissions and the default ambience
+# used outside of any defined area (see area.yml for custom zones).
+# ==============================================================================
+
 config:
+
+  # ----------------------------------------------------------------------------
+  # DEFAULT SECTION
+  # Global toggles that give players control over their own audio experience.
+  # ----------------------------------------------------------------------------
   default:
+    # Allow players to individually disable background music.
     AllowPlayerDisableMusic: true
+    # Allow players to individually disable ambient sounds.
     AllowPlayerDisableAmbient: true
 
-  # Default settings for the general area (when not in a specific zone)
+  # ----------------------------------------------------------------------------
+  # GENERAL AREA SECTION
+  # Fallback ambience and music applied when a player is not inside
+  # any zone defined in area.yml.
+  # ----------------------------------------------------------------------------
   general_area:
+    # Worlds where this default ambience applies.
     worlds:
       - world
+
     ambient:
-      # Whether ambient sounds are enabled globally
+      # Whether ambient sounds are enabled by default.
       enabled: true
-      # The default ambient profile to use (defined in ambient.yml)
+      # Ambient profile to use, as defined in ambient.yml.
       name: field
+
     music:
-      # Whether background music is enabled
+      # Whether background music is enabled by default.
       enabled: true
-      # The sound name for music
+      # Sound key played as background music.
       name: "minecraft:custom.musc"
-      # Volume level (0-100)
+      # Playback volume (0-100).
       volume: 50
-      # Duration of the music track in seconds
+      # Track duration in seconds, used to schedule the next loop.
       duration: 300
