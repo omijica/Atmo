@@ -45,7 +45,7 @@ public class SoundManager implements Listener {
         this.blockSounds = blockSoundData.getEntities();
         this.positionSounds = blockSoundData.getPositions();
     }
-    
+
     // Stocke l'état audio courant d'un joueur
     private static class PlayerMusicState {
         String currentAmbientName; // nom de l'ambiance active
@@ -68,6 +68,22 @@ public class SoundManager implements Listener {
 
         // Dernière zone connue du joueur, pour détecter un changement (téléportation, etc.)
         String currentZoneName;
+
+        // Volume personnel du joueur (0-100)
+        // Chargé une fois à la création de l'état (= avant le premier son joué au joueur),
+        // et rafraîchi manuellement via refreshPlayerVolume() quand il fait /atmo volume.
+        int musicVolume = 100;
+        int ambientVolume = 100;
+    }
+
+    // Rafraîchit le volume en cache d'un joueur (appelée par /atmo volume juste après le changement,
+    public void refreshPlayerVolume(Player player) {
+        PlayerMusicState state = states.get(player.getUniqueId());
+        if (state != null) {
+            state.musicVolume = AtmoPlayerData.getMusicVolume(player);
+            state.ambientVolume = AtmoPlayerData.getAmbientVolume(player);
+            stopAll(player, state);
+        }
     }
 
     // Lance la boucle qui met à jour les joueurs toutes les secondes
@@ -108,7 +124,13 @@ public class SoundManager implements Listener {
     private void handlePlayer(Player player) {
         ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player);
         UUID uuid = player.getUniqueId();
-        PlayerMusicState state = states.computeIfAbsent(uuid, k -> new PlayerMusicState());
+
+        PlayerMusicState state = states.computeIfAbsent(uuid, k -> {
+            PlayerMusicState newState = new PlayerMusicState();
+            newState.musicVolume = AtmoPlayerData.getMusicVolume(player);
+            newState.ambientVolume = AtmoPlayerData.getAmbientVolume(player);
+            return newState;
+        });
 
         // Si la zone a changé depuis le dernier tick (téléportation, marche rapide...),
         String zoneName = zone != null ? zone.getName() : null;
@@ -162,8 +184,9 @@ public class SoundManager implements Listener {
                     player.stopSound(state.playingSound, AMBIENT_CATEGORY);
                 }
 
+                float backgroundVolume = (float) data.backgroundVolume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(player.getLocation(), data.backgroundSound(), AMBIENT_CATEGORY, (float) data.backgroundVolume(), 1.0f);
+                    player.playSound(player.getLocation(), data.backgroundSound(), AMBIENT_CATEGORY, backgroundVolume, 1.0f);
                 } catch (IllegalArgumentException e) {
                     Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.backgroundSound() + \"' in configuration.");
                 }
@@ -182,8 +205,9 @@ public class SoundManager implements Listener {
                         float pitch = (float) (sound.pitchBase() + (Math.random() * 2 - 1) * sound.pitchVariation());
 
                         Location soundLocation = randomLocationAround(player, 3.0, 8.0);
+                        float volume = (float) sound.volume() * (state.ambientVolume / 100f);
                         try {
-                            player.playSound(soundLocation, sound.sound(), AMBIENT_CATEGORY, (float) sound.volume(), pitch);
+                            player.playSound(soundLocation, sound.sound(), AMBIENT_CATEGORY, volume, pitch);
                         } catch (IllegalArgumentException e) {
                             Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + sound.sound() + \"' in configuration.");
                         }
@@ -229,7 +253,7 @@ public class SoundManager implements Listener {
 
         // Rejoue la musique quand le cooldown est fini
         if (state.musicCooldown <= 0) {
-            float volume = getMusicVolumeEffective(zone) / 100f;
+            float volume = (getMusicVolumeEffective(zone) / 100f) * (state.musicVolume / 100f);
             try {
                 player.playSound(player.getLocation(), musicName, SoundCategory.RECORDS, volume, 1.0f);
             } catch (IllegalArgumentException e) {
@@ -288,8 +312,9 @@ public class SoundManager implements Listener {
             // Le joueur est dans le rayon et le cooldown est fini : on tente le son selon la "chance"
             if (Math.random() < data.getChance()) {
                 float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
+                float volume = (float) data.getVolume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(matchedLocation, data.getSound(), AMBIENT_CATEGORY, (float) data.getVolume(), pitch); // joué depuis la position, pas depuis le joueur
+                    player.playSound(matchedLocation, data.getSound(), AMBIENT_CATEGORY, volume, pitch); // joué depuis la position, pas depuis le joueur
                 } catch (IllegalArgumentException e) {
                     Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.getSound() + \"' in configuration.");
                 }
@@ -348,8 +373,9 @@ public class SoundManager implements Listener {
 
             if (Math.random() < data.getChance()) {
                 float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
+                float volume = (float) data.getVolume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(matchingEntity.getLocation(), data.getSound(), AMBIENT_CATEGORY, (float) data.getVolume(), pitch);
+                    player.playSound(matchingEntity.getLocation(), data.getSound(), AMBIENT_CATEGORY, volume, pitch);
                 } catch (IllegalArgumentException e) {
                     Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.getSound() + \"' in configuration.");
                 }

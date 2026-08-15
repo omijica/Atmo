@@ -1,7 +1,6 @@
 package fr.omijica.atmo;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -29,7 +28,11 @@ public final class Atmo extends JavaPlugin {
 
         itemsAdderEnabled = Bukkit.getPluginManager().isPluginEnabled("ItemsAdder");
         if (itemsAdderEnabled) {
-            getLogger().info(ChatColor.GREEN + "ItemsAdder dependency found and initialized.");
+            String gradientName = ansiGradient("ItemsAdder", 255, 105, 180, 148, 0, 211); // rose -> violet
+            String aqua = "\u001B[38;2;85;255;255m";
+            String reset = "\u001B[0m";
+
+            getLogger().info(gradientName + aqua + " dependency found and initialized." + reset);
         }
 
         this.zoneChecker = new ZoneChecker();
@@ -97,4 +100,17 @@ public final class Atmo extends JavaPlugin {
         }
     }
 
+    private String ansiGradient(String text, int fromR, int fromG, int fromB, int toR, int toG, int toB) {
+        StringBuilder sb = new StringBuilder();
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
+            float ratio = length <= 1 ? 0 : (float) i / (length - 1);
+            int r = Math.round(fromR + ratio * (toR - fromR));
+            int g = Math.round(fromG + ratio * (toG - fromG));
+            int b = Math.round(fromB + ratio * (toB - fromB));
+            sb.append("\u001B[38;2;").append(r).append(";").append(g).append(";").append(b).append("m")
+                    .append(text.charAt(i));
+        }
+        return sb.toString();
+    }
 }

@@ -219,21 +219,35 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 break;
 
             case "volume":
-                if (!player.hasPermission("atmo.admin")) {
-                    if (!player.hasPermission("atmo.volume")) {
-                        MessageUtils.sendError(player, "You do not have permission to use this command.");
-                        return true;
-                    }
+                if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.volume")) {
+                    MessageUtils.sendError(player, "You do not have permission to use this command.");
+                    return true;
                 }
 
-                if (args.length < 3) {
-                    MessageUtils.sendError(player, "Usage: /atmo volume <music|ambient> <0-100>");
+                if (args.length < 2) {
+                    MessageUtils.sendError(player, "Usage: /atmo volume <music | ambient | show> [0-100]");
                     return true;
                 }
 
                 String volumeType = args[1].toLowerCase();
+
+                // Gestion du sous-ordre "show"
+                if (volumeType.equals("show")) {
+                    int musicVol = AtmoPlayerData.getMusicVolume(player);
+                    int ambientVol = AtmoPlayerData.getAmbientVolume(player);
+                    MessageUtils.sendSuccess(player, "Current volumes — Music: <white>" + musicVol + "%<green>, Ambient: <white>" + ambientVol + "<green>%.");
+                    return true;
+                }
+
+                // Validation des types "music" et "ambient"
                 if (!volumeType.equals("music") && !volumeType.equals("ambient")) {
-                    MessageUtils.sendError(player, "Usage: /atmo volume <music|ambient> <0-100>");
+                    MessageUtils.sendError(player, "Usage: /atmo volume <music | ambient | show> [0-100]");
+                    return true;
+                }
+
+                // Vérification de la présence de la valeur numérique
+                if (args.length < 3) {
+                    MessageUtils.sendError(player, "Usage: /atmo volume " + volumeType + " <0-100>");
                     return true;
                 }
 
@@ -256,6 +270,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     AtmoPlayerData.setAmbientVolume(player, volume);
                 }
 
+                plugin.getSoundManager().refreshPlayerVolume(player);
                 MessageUtils.sendSuccess(player, "Volume for " + volumeType + " set to " + volume + "%.");
                 break;
 
@@ -287,7 +302,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             }
         } else if (args.length == 2 && args[0].equalsIgnoreCase("volume")) {
             if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
-                StringUtil.copyPartialMatches(args[1], Arrays.asList("music", "ambient"), completions);
+                StringUtil.copyPartialMatches(args[1], Arrays.asList("music", "ambient", "show"), completions);
             }
         } else if (args.length == 3 && args[0].equalsIgnoreCase("volume")) {
             if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
@@ -342,7 +357,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             "addloc", "<name> Adds your position to a BlockSound",
             "music", "Enables or disables background music",
             "ambient", "Enables or disables ambient sounds",
-            "volume", "<music|ambient> <0-100> Sets the volume"
+            "volume", "<music | ambient | show> [0-100] Sets the volume"
     );
 
     private void sendUsage(Player player) {
