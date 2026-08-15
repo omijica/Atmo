@@ -421,7 +421,8 @@ public class SoundManager implements Listener {
 
             if ("ITEMSADDER".equalsIgnoreCase(data.getType())) {
                 String furnitureId = ItemsAdderHook.getFurnitureId(nearby);
-                if (furnitureId != null && furnitureId.equalsIgnoreCase(data.getEntity())) {
+                boolean matches = furnitureId != null && furnitureId.equalsIgnoreCase(data.getEntity());
+                if (matches) {
                     return nearby;
                 }
 
