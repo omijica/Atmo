@@ -1,5 +1,6 @@
 package fr.omijica.atmo;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -217,6 +218,47 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 }
                 break;
 
+            case "volume":
+                if (!player.hasPermission("atmo.admin")) {
+                    if (!player.hasPermission("atmo.volume")) {
+                        MessageUtils.sendError(player, "You do not have permission to use this command.");
+                        return true;
+                    }
+                }
+
+                if (args.length < 3) {
+                    MessageUtils.sendError(player, "Usage: /atmo volume <music|ambient> <0-100>");
+                    return true;
+                }
+
+                String volumeType = args[1].toLowerCase();
+                if (!volumeType.equals("music") && !volumeType.equals("ambient")) {
+                    MessageUtils.sendError(player, "Usage: /atmo volume <music|ambient> <0-100>");
+                    return true;
+                }
+
+                int volume;
+                try {
+                    volume = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    MessageUtils.sendError(player, "The volume must be a whole number between 0 and 100.");
+                    return true;
+                }
+
+                if (volume < 0 || volume > 100) {
+                    MessageUtils.sendError(player, "The volume must be between 0 and 100.");
+                    return true;
+                }
+
+                if (volumeType.equals("music")) {
+                    AtmoPlayerData.setMusicVolume(player, volume);
+                } else {
+                    AtmoPlayerData.setAmbientVolume(player, volume);
+                }
+
+                MessageUtils.sendSuccess(player, "Volume for " + volumeType + " set to " + volume + "%.");
+                break;
+
             default:
                 sendUsage(player);
                 break;
@@ -242,6 +284,14 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.addloc")) {
                 List<String> subCommands = new ArrayList<>(positionSounds.keySet());
                 StringUtil.copyPartialMatches(args[1], subCommands, completions);
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("volume")) {
+            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
+                StringUtil.copyPartialMatches(args[1], Arrays.asList("music", "ambient"), completions);
+            }
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("volume")) {
+            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
+                StringUtil.copyPartialMatches(args[2], Arrays.asList("0", "25", "50", "75", "100"), completions);
             }
         }
 
@@ -275,9 +325,25 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         if (isAdmin || player.hasPermission("atmo.ambient") || generalConfigData.getAllowPlayerDisableAmbient()) {
             subCommands.add("ambient");
         }
+        if (isAdmin || player.hasPermission("atmo.volume")) {
+            subCommands.add("volume");
+        }
 
         return subCommands;
     }
+
+    private static final Set<String> ADMIN_SUBCOMMANDS = Set.of("reload", "addloc", "menu", "editor", "info");
+
+    private static final Map<String, String> SUBCOMMAND_DESCRIPTIONS = Map.of(
+            "menu", "Open the settings menu",
+            "editor", "Enables/disables the zone editor mode",
+            "info", "Shows which zone you are currently in",
+            "reload", "Reloads the Atmo configuration and zones",
+            "addloc", "<name> Adds your position to a BlockSound",
+            "music", "Enables or disables background music",
+            "ambient", "Enables or disables ambient sounds",
+            "volume", "<music|ambient> <0-100> Sets the volume"
+    );
 
     private void sendUsage(Player player) {
         List<String> available = getAvailableSubCommands(player);
@@ -287,7 +353,20 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             return;
         }
 
-        MessageUtils.sendInfo(player, "Usage: /atmo <" + String.join("|", available) + ">");
+        player.sendMessage(separator());
+
+        for (String cmd : available) {
+            String description = SUBCOMMAND_DESCRIPTIONS.getOrDefault(cmd, "");
+            ChatColor nameColor = ADMIN_SUBCOMMANDS.contains(cmd) ? ChatColor.RED : ChatColor.GREEN;
+
+            player.sendMessage(ChatColor.GRAY + "/atmo " + nameColor + ChatColor.BOLD + cmd + ChatColor.RESET + ChatColor.WHITE + " (" + description + ")");
+        }
+
+        player.sendMessage(separator());
+    }
+
+    private String separator() {
+        return ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                              " + ChatColor.RESET;
     }
 
     private String serializeLocation(Location loc) {

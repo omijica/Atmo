@@ -45,7 +45,7 @@ public class SoundManager implements Listener {
         this.blockSounds = blockSoundData.getEntities();
         this.positionSounds = blockSoundData.getPositions();
     }
-
+    
     // Stocke l'état audio courant d'un joueur
     private static class PlayerMusicState {
         String currentAmbientName; // nom de l'ambiance active

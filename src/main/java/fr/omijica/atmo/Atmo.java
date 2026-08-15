@@ -1,6 +1,7 @@
 package fr.omijica.atmo;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -28,7 +29,7 @@ public final class Atmo extends JavaPlugin {
 
         itemsAdderEnabled = Bukkit.getPluginManager().isPluginEnabled("ItemsAdder");
         if (itemsAdderEnabled) {
-            getLogger().info("ItemsAdder dependency found and initialized.");
+            getLogger().info(ChatColor.GREEN + "ItemsAdder dependency found and initialized.");
         }
 
         this.zoneChecker = new ZoneChecker();
