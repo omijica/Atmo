@@ -10,4 +10,5 @@ commands:
   atmo:
     description: Main command of Atmo Plugin.
     permission: atmo.use
-    usage: /atmo
+    usage: /atmo <menu|editor|info|reload|addloc|music|ambient|volume>
+    aliases: []
