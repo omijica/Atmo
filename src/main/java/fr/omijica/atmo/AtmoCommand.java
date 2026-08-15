@@ -2,6 +2,7 @@ package fr.omijica.atmo;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,6 +15,8 @@ import org.bukkit.util.StringUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import static fr.omijica.atmo.MessageUtils.playSound;
 
 public class AtmoCommand implements CommandExecutor, TabExecutor {
 
@@ -375,6 +378,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             ChatColor nameColor = ADMIN_SUBCOMMANDS.contains(cmd) ? ChatColor.RED : ChatColor.GREEN;
 
             player.sendMessage(ChatColor.GRAY + "/atmo " + nameColor + ChatColor.BOLD + cmd + ChatColor.RESET + ChatColor.WHITE + " (" + description + ")");
+            playSound(player, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
         }
 
         player.sendMessage(separator());
