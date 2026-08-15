@@ -27,6 +27,9 @@ public final class Atmo extends JavaPlugin {
         saveDefaultFiles();
 
         itemsAdderEnabled = Bukkit.getPluginManager().isPluginEnabled("ItemsAdder");
+        if (itemsAdderEnabled) {
+            getLogger().info("ItemsAdder dependency found and initialized.");
+        }
 
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();

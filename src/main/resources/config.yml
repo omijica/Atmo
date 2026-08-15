@@ -6,6 +6,8 @@ config:
 
   # Default settings for the general area (when not in a specific zone)
   general_area:
+    worlds:
+      - world
     ambient:
       # Whether ambient sounds are enabled globally
       enabled: true

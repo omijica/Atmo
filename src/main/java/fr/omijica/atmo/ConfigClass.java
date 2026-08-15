@@ -4,6 +4,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConfigClass {
 
@@ -29,10 +31,12 @@ public class ConfigClass {
 
     public record GeneralAreaData(
             AmbientSettings ambient,
-            MusicSettings music
+            MusicSettings music,
+            List<String> worlds
     ) {
         public AmbientSettings getAmbient() { return ambient; }
         public MusicSettings getMusic() { return music; }
+        public List<String> getWorlds() { return worlds; }
     }
 
     public static GeneralAreaData load(File dataFolder) {
@@ -43,7 +47,8 @@ public class ConfigClass {
         if (section == null) {
             return new GeneralAreaData(
                     new AmbientSettings(false, ""),
-                    new MusicSettings(false, "", 0, 0)
+                    new MusicSettings(false, "", 0, 0),
+                    new ArrayList<>()
             );
         }
 
@@ -55,9 +60,12 @@ public class ConfigClass {
         int musicVolume = section.getInt("music.volume", 100);
         int musicDuration = section.getInt("music.duration", 0);
 
+        List<String> worlds = section.getStringList("worlds");
+        if (worlds == null) worlds = new ArrayList<>();
+
         return new GeneralAreaData(
                 new AmbientSettings(ambientEnabled, ambientName),
-                new MusicSettings(musicEnabled, musicName, musicVolume, musicDuration)
+                new MusicSettings(musicEnabled, musicName, musicVolume, musicDuration), worlds
         );
     }
 

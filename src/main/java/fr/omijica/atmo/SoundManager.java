@@ -120,7 +120,7 @@ public class SoundManager implements Listener {
         handleBlockSounds(player, state);
 
         // Gestion de la musique
-        if (isMusicEnabledEffective(zone)) {
+        if (isMusicEnabledEffective(zone, player)) {
             handleMusic(player, zone, state);
         } else {
             stopMusic(player, state);
@@ -133,7 +133,7 @@ public class SoundManager implements Listener {
             return; // le joueur a désactivé l'ambiance'
         }
 
-        if (isAmbientEnabledEffective(zone)) {
+        if (isAmbientEnabledEffective(zone, player)) {
             String ambientName = getAmbientNameEffective(zone);
 
             // Si l'ambiance a changé, on coupe l'ancien son
@@ -441,8 +441,14 @@ public class SoundManager implements Listener {
 
     // --- Ambiance ---
 
-    private boolean isAmbientEnabledEffective(ZoneClass zone) {
-        return zone != null ? zone.getAmbientEnabled() : generalArea.getAmbient().getEnabled();
+    private boolean isAmbientEnabledEffective(ZoneClass zone, Player player) {
+        if (zone != null) {
+            return zone.getAmbientEnabled();
+        }
+        if (generalArea != null && generalArea.getWorlds().contains(player.getWorld().getName())) {
+            return generalArea.getAmbient().getEnabled();
+        }
+        return false;
     }
 
     private String getAmbientNameEffective(ZoneClass zone) {
@@ -451,8 +457,14 @@ public class SoundManager implements Listener {
 
     // --- Musique ---
 
-    private boolean isMusicEnabledEffective(ZoneClass zone) {
-        return zone != null ? zone.getMusicEnabled() : generalArea.getMusic().getEnabled();
+    private boolean isMusicEnabledEffective(ZoneClass zone, Player player) {
+        if (zone != null) {
+            return zone.getMusicEnabled();
+        }
+        if (generalArea != null && generalArea.getWorlds().contains(player.getWorld().getName())) {
+            return generalArea.getMusic().getEnabled();
+        }
+        return false;
     }
 
     private String getMusicNameEffective(ZoneClass zone) {
