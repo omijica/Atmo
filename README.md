@@ -2,6 +2,8 @@
 
 **Give every corner of your world its own soundscape, ambient sounds and background music.**
 
+https://www.spigotmc.org/resources/atmo-ambient-sounds-music-1-20-6.138062/
+
 ---
 
 **Supported versions:**
@@ -20,7 +22,7 @@ Atmo can also trigger sounds based on what is around the player (such as a decor
 
 ### Video preview
 
-![features_title]
+### Features
 
 - **✓** Create cuboid **zones** in-game by selecting two corners, without any dependencies (no WorldGuard needed).
 - **✓** Each zone has a **priority**, a linked **ambient profile** and/or **background music**, editable through `area.yml`.
@@ -33,26 +35,24 @@ Atmo can also trigger sounds based on what is around the player (such as a decor
 - **✓** **Per-player controls**: players can toggle background music and ambient sounds on/off, and set their own music/ambient volume (0–100%).
 - **✓** Built-in **menu displaying the list of zones**, showing the world, positions, priority, music and ambience for each zone, as well as options for teleportation, redefinition and deletion.
 
-![Future features_title]
-
 ### Future features
 
 * Option to disable/re-enable a sound zone/ambient/music per player.
 
-![requirements_title]
+### Requirements
 
 1. [Paper](https://papermc.io/downloads/all) 1.20.6+
 2. Java 17+
 3. [ItemsAdder](https://www.spigotmc.org/resources/itemsadder.73355/) — **optional**, only needed if you want to bind sounds to ItemsAdder furniture.
 
-![installation_title]
+### Installation
 
 1. **Download** the Atmo plugin JAR file.
 2. Place the JAR in your server's **plugins** folder.
 3. **Restart** your server; Atmo will generate `area.yml`, `ambient.yml`, `blockSound.yml` and `config.yml` in `plugins/atmo/`.
 4. Edit `ambient.yml` (and `config.yml` for the default ambience) to design your soundscapes, then create zones in-game with `/atmo menu`.
 
-![configuration_title]
+### Configuration
 
 Atmo generates four configuration files, each with a specific function:
 
@@ -147,9 +147,11 @@ blockSound:
         - world, 100, 60, 100
 ```
 
-![commands-title]
+### Commands 
 
-![permissions_title]
+![Commands](https://i.ibb.co/6cVMzMmd/image.png)
+
+### Permissions
 
 - **atmo.use** — Base permission required to use `/atmo` (default command permission).
 - **atmo.admin** — Grants access to every subcommand.
@@ -162,7 +164,7 @@ blockSound:
 - **atmo.ambient** — Use `/atmo ambient` (not required if `AllowPlayerDisableAmbient` is true in `config.yml`).
 - **atmo.volume** — Use `/atmo volume`.
 
-![usage_title]
+### Usage
 
 **Creating a Zone**
 
@@ -179,7 +181,7 @@ Run **/atmo menu** and click **"Edit an area."** to open the paginated zone list
 
 Once a `positions` entry exists in `blockSound.yml` (e.g. `voices`), stand where you want the sound to trigger and run **/atmo addloc voices** to append your current coordinates to that entry.
 
-![support_title]
+### Support
 
 If you run into any issue or have a suggestion for **Atmo**, feel free to open the Discussion tab below.
 
