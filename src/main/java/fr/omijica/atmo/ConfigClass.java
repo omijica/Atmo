@@ -4,20 +4,18 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 /** Lit les options globales et les réglages sonores appliqués en dehors des zones définies. */
-public class ConfigClass {
+public final class ConfigClass {
+
+    private ConfigClass() {}
 
     /** Activation de l'ambiance et nom du profil correspondant dans ambient.yml. */
     public record AmbientSettings(
             boolean enabled,
             String name
-    ) {
-        public boolean getEnabled() { return enabled; }
-        public String getName() { return name; }
-    }
+    ) {}
 
     /** Réglages musicaux : clé du son, volume en pourcentage et durée en secondes. */
     public record MusicSettings(
@@ -25,12 +23,7 @@ public class ConfigClass {
             String name,
             int volume,
             int duration
-    ) {
-        public boolean getEnabled() { return enabled; }
-        public String getName() { return name; }
-        public int getVolume() { return volume; }
-        public int getDuration() { return duration; }
-    }
+    ) {}
 
     /** Ambiance et musique de repli, limitées aux mondes explicitement listés. */
     public record GeneralAreaData(
@@ -38,9 +31,9 @@ public class ConfigClass {
             MusicSettings music,
             List<String> worlds
     ) {
-        public AmbientSettings getAmbient() { return ambient; }
-        public MusicSettings getMusic() { return music; }
-        public List<String> getWorlds() { return worlds; }
+        public GeneralAreaData {
+            worlds = List.copyOf(worlds);
+        }
     }
 
     /** Charge config.general_area ; une section absente désactive les sons de repli. */
@@ -53,7 +46,7 @@ public class ConfigClass {
             return new GeneralAreaData(
                     new AmbientSettings(false, ""),
                     new MusicSettings(false, "", 0, 0),
-                    new ArrayList<>()
+                    List.of()
             );
         }
 
@@ -66,7 +59,6 @@ public class ConfigClass {
         int musicDuration = section.getInt("music.duration", 0);
 
         List<String> worlds = section.getStringList("worlds");
-        if (worlds == null) worlds = new ArrayList<>();
 
         return new GeneralAreaData(
                 new AmbientSettings(ambientEnabled, ambientName),
@@ -98,8 +90,5 @@ public class ConfigClass {
     public record GeneralConfigData(
             boolean allowPlayerDisableMusic,
             boolean allowPlayerDisableAmbient
-    ) {
-        public boolean getAllowPlayerDisableMusic() { return allowPlayerDisableMusic; }
-        public boolean getAllowPlayerDisableAmbient() { return allowPlayerDisableAmbient; }
-    }
+    ) {}
 }

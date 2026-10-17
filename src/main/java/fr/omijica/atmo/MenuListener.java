@@ -12,6 +12,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.io.IOException;
+import java.util.logging.Level;
+
 /** Relie les clics dans les inventaires Atmo aux actions de création et de gestion des zones. */
 public class MenuListener implements Listener {
 
@@ -106,7 +109,14 @@ public class MenuListener implements Listener {
             }
             // Case 15 : suppression puis retour à la page consultée.
             else if (slot == 15) {
-                plugin.getZoneChecker().deleteZone(plugin.getDataFolder(), zoneName);
+                try {
+                    ZoneConfig.delete(plugin.getDataFolder(), zone.getName());
+                } catch (IOException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Unable to delete the zone from area.yml!", e);
+                    MessageUtils.sendError(player, "Unable to delete the zone.");
+                    return;
+                }
+                plugin.getZoneChecker().removeZone(zone.getName());
                 MessageUtils.sendSuccess(player, "Zone " + zoneName + " deleted!");
 
                 int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);

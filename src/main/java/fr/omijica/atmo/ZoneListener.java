@@ -151,7 +151,7 @@ public class ZoneListener implements Listener {
             e.printStackTrace();
         }
 
-        zoneChecker.loadZones(plugin.getDataFolder());
+        zoneChecker.setZones(ZoneConfig.load(plugin.getDataFolder()));
     }
 
     /** Libère la sélection inachevée lorsque le joueur quitte le serveur. */

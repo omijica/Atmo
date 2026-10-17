@@ -14,10 +14,7 @@ public final class Atmo extends JavaPlugin {
     private ZoneListener zoneListener;
     private ZoneChecker zoneChecker;
     private AtmoMenu atmoMenu;
-    private Ambient ambient;
     private SoundManager soundManager;
-    private ConfigClass configClass;
-    private BlockSoundClass blockSoundClass;
     private boolean itemsAdderEnabled = false;
 
     @Override
@@ -42,12 +39,9 @@ public final class Atmo extends JavaPlugin {
 
         // Crée d'abord les services dont dépendent le moteur sonore, les menus et les commandes.
         this.zoneChecker = new ZoneChecker();
-        this.ambient = new Ambient();
         this.soundManager = new SoundManager(this);
         this.zoneListener = new ZoneListener(this, this.zoneChecker);
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
-        this.configClass = new ConfigClass();
-        this.blockSoundClass = new BlockSoundClass();
         // Les clés de stockage doivent exister avant la première lecture des préférences.
         AtmoPlayerData.init(this);
 
@@ -62,7 +56,7 @@ public final class Atmo extends JavaPlugin {
         getServer().getPluginManager().registerEvents(this.zoneListener, this);
 
         // Charge les zones avant de lancer la boucle sonore, qui les consultera à chaque passage.
-        zoneChecker.loadZones(getDataFolder());
+        zoneChecker.setZones(ZoneConfig.load(getDataFolder()));
         getLogger().info("AtmoPlugin enabled !");
 
         this.soundManager.start();
@@ -77,12 +71,6 @@ public final class Atmo extends JavaPlugin {
 
     public boolean getItemsAdderEnabled() {return itemsAdderEnabled;}
 
-    public ConfigClass getConfigClass() {return this.configClass;}
-
-    public Ambient getAmbient() {
-        return this.ambient;
-    }
-
     public SoundManager getSoundManager() {return this.soundManager;}
 
     public ZoneListener getZoneListener() {
@@ -96,8 +84,6 @@ public final class Atmo extends JavaPlugin {
     public ZoneChecker getZoneChecker() {
         return this.zoneChecker;
     }
-
-    public BlockSoundClass getBlockSoundClass() {return this.blockSoundClass;}
 
     /** Préserve les réglages existants en ne créant que les fichiers manquants. */
     private void saveDefaultFiles() {

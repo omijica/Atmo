@@ -4,7 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,9 @@ import java.util.Map;
  * Lit blockSound.yml et sépare les sources liées à des entités des sources à coordonnées fixes.
  * Les probabilités vont de 0 à 1, les délais sont en secondes et les rayons en blocs.
  */
-public class BlockSoundClass {
+public final class BlockSoundClass {
+
+    private BlockSoundClass() {}
 
     /**
      * Source attachée à une entité Bukkit ou à un meuble ItemsAdder selon type.
@@ -32,20 +34,7 @@ public class BlockSoundClass {
             double pitchBase,
             boolean enabled,
             String type
-    ) {
-        public String getEntity() { return entity; }
-        public int getCustomModelData() { return customModelData; }
-        public int getRadius() { return radius; }
-        public String getSound() { return sound; }
-        public double getChance() { return chance; }
-        public int getMinDelay() { return minDelay; }
-        public int getMaxDelay() { return maxDelay; }
-        public double getVolume() { return volume; }
-        public double getPitchVariation() { return pitchVariation; }
-        public double getPitchBase() { return pitchBase; }
-        public boolean getEnabled() { return enabled; }
-        public String getType() {return type;}
-    }
+    ) {}
 
     /** Source partageant les mêmes réglages pour une liste de positions « monde, x, y, z ». */
     public record PositionEntry(
@@ -60,16 +49,9 @@ public class BlockSoundClass {
             boolean enabled,
             List<String> locations
     ) {
-        public String getSound() { return sound; }
-        public int getRadius() { return radius; }
-        public double getChance() { return chance; }
-        public int getMinDelay() { return minDelay; }
-        public int getMaxDelay() { return maxDelay; }
-        public double getVolume() { return volume; }
-        public double getPitchVariation() { return pitchVariation; }
-        public double getPitchBase() { return pitchBase; }
-        public boolean getEnabled() { return enabled; }
-        public List<String> getLocations() { return locations; }
+        public PositionEntry {
+            locations = List.copyOf(locations);
+        }
     }
 
     /** Regroupe les deux types de sources, chacun indexé par le nom de son entrée YAML. */
@@ -77,8 +59,10 @@ public class BlockSoundClass {
             Map<String, EntityEntry> entities,
             Map<String, PositionEntry> positions
     ) {
-        public Map<String, EntityEntry> getEntities() { return entities; }
-        public Map<String, PositionEntry> getPositions() { return positions; }
+        public BlockSoundData {
+            entities = Collections.unmodifiableMap(new LinkedHashMap<>(entities));
+            positions = Collections.unmodifiableMap(new LinkedHashMap<>(positions));
+        }
     }
 
     /** Charge les entrées disponibles ; une section absente produit une collection vide. */
@@ -135,7 +119,6 @@ public class BlockSoundClass {
 
                 // Les coordonnées seront converties en positions Bukkit par le moteur sonore.
                 List<String> locations = entrySection.getStringList("locations");
-                if (locations == null) locations = new ArrayList<>();
 
                 positions.put(key, new PositionEntry(
                         sound, radius, chance, minDelay, maxDelay, volume,

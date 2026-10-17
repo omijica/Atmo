@@ -5,12 +5,15 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /** Charge les profils d'ambiance d'ambient.yml, composés d'un fond et de sons aléatoires. */
-public class Ambient {
+public final class Ambient {
+
+    private Ambient() {}
 
     /**
      * Son ponctuel : probabilité entre 0 et 1, délais en secondes et volume multiplicateur.
@@ -32,7 +35,11 @@ public class Ambient {
             double backgroundVolume,
             int backgroundInterval,
             List<RandomSoundData> randomSounds
-    ) {}
+    ) {
+        public AmbientData {
+            randomSounds = List.copyOf(randomSounds);
+        }
+    }
 
     /** Indexe les profils par leur nom, utilisé ensuite dans area.yml et config.yml. */
     public static Map<String, AmbientData> load(File dataFolder) {
@@ -69,11 +76,10 @@ public class Ambient {
                 randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation, pitchBase));
             }
 
-            // Fige la liste pour que le moteur sonore ne puisse pas la modifier après le chargement.
-            ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, List.copyOf(randomSounds)));
+            ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, randomSounds));
         }
 
-        return ambiances;
+        return Collections.unmodifiableMap(ambiances);
     }
 
     // Convertit n'importe quel Number YAML (Integer, Double, Long...) en double, avec une valeur par défaut si absent/invalide
@@ -92,11 +98,4 @@ public class Ambient {
         return defaultValue;
     }
 
-    // Lit une valeur booléenne, avec une valeur par défaut si elle est absente ou invalide.
-    private static boolean toBoolean(Object raw, boolean defaultValue) {
-        if (raw instanceof Boolean bool) {
-            return bool;
-        }
-        return defaultValue;
-    }
 }

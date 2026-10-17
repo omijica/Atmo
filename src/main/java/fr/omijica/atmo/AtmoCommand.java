@@ -33,8 +33,8 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         this.plugin = plugin;
         this.zoneChecker = zoneChecker;
         this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-        this.positionSounds = blockSoundData.getPositions();
-        this.generalConfigData = plugin.getConfigClass().loadBaseConfig(plugin.getDataFolder());
+        this.positionSounds = blockSoundData.positions();
+        this.generalConfigData = ConfigClass.loadBaseConfig(plugin.getDataFolder());
     }
 
     /** Vérifie l'accès du joueur, puis traite la sous-commande demandée. */
@@ -119,11 +119,11 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     }
                 }
                 // Recharge les différentes vues de la configuration pour aligner commandes et sons.
-                zoneChecker.loadZones(plugin.getDataFolder());
+                zoneChecker.setZones(ZoneConfig.load(plugin.getDataFolder()));
                 plugin.getSoundManager().reload();
                 this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-                this.positionSounds = blockSoundData.getPositions();
-                this.generalConfigData = plugin.getConfigClass().loadBaseConfig(plugin.getDataFolder());
+                this.positionSounds = blockSoundData.positions();
+                this.generalConfigData = ConfigClass.loadBaseConfig(plugin.getDataFolder());
                 MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 
@@ -173,7 +173,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     }
 
                     this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-                    this.positionSounds = blockSoundData.getPositions();
+                    this.positionSounds = blockSoundData.positions();
                     plugin.getSoundManager().reload();
 
                     MessageUtils.sendSuccess(player, "Position added to '" + arg2 + "' !");
@@ -188,7 +188,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             case "music":
                 if (!player.hasPermission("atmo.admin")) {
                     if (!player.hasPermission("atmo.music")) {
-                        if (!generalConfigData.getAllowPlayerDisableMusic()) {
+                        if (!generalConfigData.allowPlayerDisableMusic()) {
                             MessageUtils.sendError(player, "You do not have permission to use this command.");
                             return true;
                         }
@@ -211,7 +211,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             case "ambient":
                 if (!player.hasPermission("atmo.admin")) {
                     if (!player.hasPermission("atmo.ambient")) {
-                        if (!generalConfigData.getAllowPlayerDisableAmbient()) {
+                        if (!generalConfigData.allowPlayerDisableAmbient()) {
                             MessageUtils.sendError(player, "You do not have permission to use this command.");
                             return true;
                         }
@@ -350,10 +350,10 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         if (isAdmin || player.hasPermission("atmo.addloc")) {
             subCommands.add("addloc");
         }
-        if (isAdmin || player.hasPermission("atmo.music") || generalConfigData.getAllowPlayerDisableMusic()) {
+        if (isAdmin || player.hasPermission("atmo.music") || generalConfigData.allowPlayerDisableMusic()) {
             subCommands.add("music");
         }
-        if (isAdmin || player.hasPermission("atmo.ambient") || generalConfigData.getAllowPlayerDisableAmbient()) {
+        if (isAdmin || player.hasPermission("atmo.ambient") || generalConfigData.allowPlayerDisableAmbient()) {
             subCommands.add("ambient");
         }
         if (isAdmin || player.hasPermission("atmo.volume")) {

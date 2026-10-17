@@ -30,7 +30,6 @@ public class SoundManager implements Listener {
     private static final SoundCategory AMBIENT_CATEGORY = SoundCategory.AMBIENT;
 
     private final Atmo plugin;
-    private final Ambient ambient;
     private Map<String, Ambient.AmbientData> ambiances; // profils d'ambiance indexés par nom
     private ConfigClass.GeneralAreaData generalArea; // réglages de repli hors zone
     private final Map<UUID, PlayerMusicState> states = new HashMap<>(); // état son/musique par joueur
@@ -43,12 +42,11 @@ public class SoundManager implements Listener {
     /** Charge les profils et les sources une fois, puis les conserve jusqu'au prochain rechargement. */
     public SoundManager(Atmo plugin) {
         this.plugin = plugin;
-        this.ambient = plugin.getAmbient();
         this.ambiances = Ambient.load(plugin.getDataFolder());
         this.generalArea = ConfigClass.load(plugin.getDataFolder());
         this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-        this.blockSounds = blockSoundData.getEntities();
-        this.positionSounds = blockSoundData.getPositions();
+        this.blockSounds = blockSoundData.entities();
+        this.positionSounds = blockSoundData.positions();
     }
 
     // État propre à un joueur : les délais d'un joueur ne décalent pas ceux des autres.
@@ -114,8 +112,8 @@ public class SoundManager implements Listener {
         this.ambiances = Ambient.load(plugin.getDataFolder());
         this.generalArea = ConfigClass.load(plugin.getDataFolder());
         this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-        this.blockSounds = blockSoundData.getEntities();
-        this.positionSounds = blockSoundData.getPositions();
+        this.blockSounds = blockSoundData.entities();
+        this.positionSounds = blockSoundData.positions();
     }
 
     // Demande l'arrêt des sons à la désactivation ; Bukkit annule les tâches du plugin désactivé.
@@ -291,18 +289,18 @@ public class SoundManager implements Listener {
             String key = entry.getKey();
             BlockSoundClass.PositionEntry data = entry.getValue();
 
-            if (!data.getEnabled()) {
+            if (!data.enabled()) {
                 stopPositionSound(player, state, key); // entrée désactivée en cours de route = on coupe
                 continue;
             }
 
             // On cherche si le joueur est proche d'au moins une des positions listées
             Location matchedLocation = null;
-            for (String rawLocation : data.getLocations()) {
+            for (String rawLocation : data.locations()) {
                 Location target = parseLocation(rawLocation);
                 if (target == null || target.getWorld() != player.getWorld()) continue;
 
-                if (target.distance(player.getLocation()) <= data.getRadius()) {
+                if (target.distance(player.getLocation()) <= data.radius()) {
                     matchedLocation = target;
                     break;
                 }
@@ -325,21 +323,21 @@ public class SoundManager implements Listener {
 
             // Une seule position est retenue par entrée : la première de la liste dans le rayon.
             // À la fin du délai, la probabilité « chance » décide si le son est joué.
-            if (Math.random() < data.getChance()) {
-                float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
-                float volume = (float) data.getVolume() * (state.ambientVolume / 100f);
+            if (Math.random() < data.chance()) {
+                float pitch = (float) (data.pitchBase() + (Math.random() * 2 - 1) * data.pitchVariation());
+                float volume = (float) data.volume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(matchedLocation, data.getSound(), AMBIENT_CATEGORY, volume, pitch); // joué depuis la position, pas depuis le joueur
+                    player.playSound(matchedLocation, data.sound(), AMBIENT_CATEGORY, volume, pitch); // joué depuis la position, pas depuis le joueur
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.getSound() + \"' in configuration.");
+                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.sound() + \"' in configuration.");
                 }
 
-                state.playingPositionSounds.put(key, data.getSound()); // on mémorise le son en cours pour pouvoir le couper
+                state.playingPositionSounds.put(key, data.sound()); // on mémorise le son en cours pour pouvoir le couper
             }
 
             // Fixe un nouveau délai, qu'un son ait été joué ou non.
-            int min = Math.min(data.getMinDelay(), data.getMaxDelay());
-            int max = Math.max(data.getMinDelay(), data.getMaxDelay());
+            int min = Math.min(data.minDelay(), data.maxDelay());
+            int max = Math.max(data.minDelay(), data.maxDelay());
             int nextCooldown = ThreadLocalRandom.current().nextInt(min, max + 1);
             state.positionCooldowns.put(key, nextCooldown);
         }
@@ -359,13 +357,13 @@ public class SoundManager implements Listener {
             String key = entry.getKey();
             BlockSoundClass.EntityEntry data = entry.getValue();
 
-            if (!data.getEnabled()) {
+            if (!data.enabled()) {
                 stopEntitySound(player, state, key);
                 continue;
             }
 
             // Évite tout appel à l'API facultative si ItemsAdder n'est pas actif.
-            if ("ITEMSADDER".equalsIgnoreCase(data.getType()) && !plugin.getItemsAdderEnabled()) {
+            if ("ITEMSADDER".equalsIgnoreCase(data.type()) && !plugin.getItemsAdderEnabled()) {
                 stopEntitySound(player, state, key);
                 continue;
             }
@@ -386,20 +384,20 @@ public class SoundManager implements Listener {
                 continue;
             }
 
-            if (Math.random() < data.getChance()) {
-                float pitch = (float) (data.getPitchBase() + (Math.random() * 2 - 1) * data.getPitchVariation());
-                float volume = (float) data.getVolume() * (state.ambientVolume / 100f);
+            if (Math.random() < data.chance()) {
+                float pitch = (float) (data.pitchBase() + (Math.random() * 2 - 1) * data.pitchVariation());
+                float volume = (float) data.volume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(matchingEntity.getLocation(), data.getSound(), AMBIENT_CATEGORY, volume, pitch);
+                    player.playSound(matchingEntity.getLocation(), data.sound(), AMBIENT_CATEGORY, volume, pitch);
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.getSound() + \"' in configuration.");
+                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.sound() + \"' in configuration.");
                 }
 
-                state.playingEntitySounds.put(key, data.getSound());
+                state.playingEntitySounds.put(key, data.sound());
             }
 
-            int min = Math.min(data.getMinDelay(), data.getMaxDelay());
-            int max = Math.max(data.getMinDelay(), data.getMaxDelay());
+            int min = Math.min(data.minDelay(), data.maxDelay());
+            int max = Math.max(data.minDelay(), data.maxDelay());
             int nextCooldown = ThreadLocalRandom.current().nextInt(min, max + 1);
             state.entityCooldowns.put(key, nextCooldown);
         }
@@ -430,29 +428,29 @@ public class SoundManager implements Listener {
 
     // Cherche une entité proche du joueur qui correspond à l'entrée blockSound (vanilla ou ItemsAdder)
     private Entity isNearMatchingEntity(Player player, BlockSoundClass.EntityEntry data) {
-        double r = data.getRadius();
+        double r = data.radius();
 
         // Bukkit recherche dans une boîte de demi-dimensions r sur chaque axe.
         // Le premier résultat correspondant est retenu, sans classement par distance.
         for (Entity nearby : player.getNearbyEntities(r, r, r)) {
 
-            if ("ITEMSADDER".equalsIgnoreCase(data.getType())) {
+            if ("ITEMSADDER".equalsIgnoreCase(data.type())) {
                 String furnitureId = ItemsAdderHook.getFurnitureId(nearby);
-                boolean matches = furnitureId != null && furnitureId.equalsIgnoreCase(data.getEntity());
+                boolean matches = furnitureId != null && furnitureId.equalsIgnoreCase(data.entity());
                 if (matches) {
                     return nearby;
                 }
 
             } else {
-                if (!nearby.getType().name().equalsIgnoreCase(data.getEntity())) continue;
-                if (data.getCustomModelData() == 0) return nearby;
+                if (!nearby.getType().name().equalsIgnoreCase(data.entity())) continue;
+                if (data.customModelData() == 0) return nearby;
 
                 // Le filtre de modèle ne s'applique qu'au casque des porte-armures.
                 if (nearby instanceof ArmorStand standEntity) {
                     ItemStack helmet = standEntity.getEquipment().getHelmet();
                     if (helmet != null && helmet.hasItemMeta()
                             && helmet.getItemMeta().hasCustomModelData()
-                            && helmet.getItemMeta().getCustomModelData() == data.getCustomModelData()) {
+                            && helmet.getItemMeta().getCustomModelData() == data.customModelData()) {
                         return nearby;
                     }
                 }
@@ -491,15 +489,15 @@ public class SoundManager implements Listener {
         if (zone != null) {
             return zone.getAmbientEnabled();
         }
-        if (generalArea != null && generalArea.getWorlds().contains(player.getWorld().getName())) {
-            return generalArea.getAmbient().getEnabled();
+        if (generalArea != null && generalArea.worlds().contains(player.getWorld().getName())) {
+            return generalArea.ambient().enabled();
         }
         return false;
     }
 
     // À appeler après la vérification d'activation, qui valide aussi la disponibilité du repli.
     private String getAmbientNameEffective(ZoneClass zone) {
-        return zone != null ? zone.getAmbientName() : generalArea.getAmbient().getName();
+        return zone != null ? zone.getAmbientName() : generalArea.ambient().name();
     }
 
     // La musique suit la même règle : réglages de la zone, sinon repli autorisé pour le monde.
@@ -508,22 +506,22 @@ public class SoundManager implements Listener {
         if (zone != null) {
             return zone.getMusicEnabled();
         }
-        if (generalArea != null && generalArea.getWorlds().contains(player.getWorld().getName())) {
-            return generalArea.getMusic().getEnabled();
+        if (generalArea != null && generalArea.worlds().contains(player.getWorld().getName())) {
+            return generalArea.music().enabled();
         }
         return false;
     }
 
     private String getMusicNameEffective(ZoneClass zone) {
-        return zone != null ? zone.getMusicName() : generalArea.getMusic().getName();
+        return zone != null ? zone.getMusicName() : generalArea.music().name();
     }
 
     private int getMusicVolumeEffective(ZoneClass zone) {
-        return zone != null ? zone.getMusicVolume() : generalArea.getMusic().getVolume();
+        return zone != null ? zone.getMusicVolume() : generalArea.music().volume();
     }
 
     private int getMusicDurationEffective(ZoneClass zone) {
-        return zone != null ? zone.getMusicDuration() : generalArea.getMusic().getDuration();
+        return zone != null ? zone.getMusicDuration() : generalArea.music().duration();
     }
 
     // Arrête le fond et les sons aléatoires du profil ; les sources spatiales sont gérées séparément.
