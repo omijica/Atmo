@@ -18,7 +18,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.net.URI;
 import java.util.*;
 
-// Gère les interfaces graphiques (GUI) du plugin.
+/** Construit le menu principal, la saisie du nom et les écrans de gestion des zones. */
 public class AtmoMenu {
 
     MiniMessage mm = MiniMessage.miniMessage();
@@ -69,7 +69,7 @@ public class AtmoMenu {
     public static void openAnvilMenu(Atmo plugin, Player player) {
         new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 
-                // Vérifie si le clic est sur le slot de sortie.
+                // Seul le résultat de l'enclume valide le texte saisi.
                 if (slot != AnvilGUI.Slot.OUTPUT) {
                     return Collections.emptyList();
                 }
@@ -82,7 +82,7 @@ public class AtmoMenu {
                     return List.of(AnvilGUI.ResponseAction.replaceInputText("Area Name"));
                 }
 
-                // Initialise la création de la zone.
+                // Lance la sélection des coins ; la zone sera enregistrée une fois les deux blocs choisis.
                 MessageUtils.sendSuccess(player, "Zone <white>\"" + zoneName + "\" <green>successfully created!");
                 ZoneListener zListener = plugin.getZoneListener();
                 zListener.enableCreationMode(player, zoneName);
@@ -95,12 +95,13 @@ public class AtmoMenu {
         .open(player);
     }
 
-    /* MENU LIST AREAS */
+    /* Liste des zones et navigation entre les pages. */
 
     private final ZoneChecker zoneChecker;
     private static final int PAGE_SLOTS = 45; // Emplacements par page.
     private static final int PREVIOUS = 52; // Bouton page précédente.
     private static final int NEXT   = 53; // Bouton page suivante.
+    // Mémorise la page de chaque joueur pour y revenir après l'édition d'une zone.
     private final Map<UUID, Integer> playerPage = new HashMap<>();
 
     AtmoMenu(ZoneChecker zoneChecker) {
@@ -133,6 +134,7 @@ public class AtmoMenu {
             gui.setItem(i,glassFiller);
         }
 
+        // La texture encodée en Base64 fournit l'URL de la flèche appliquée à un profil de tête.
         // Configure la tête pour le bouton "Suivant".
         if (rightMeta != null) {
             try {
@@ -191,6 +193,7 @@ public class AtmoMenu {
         /* Pagination et affichage des zones */
         List<ZoneClass> zones = zoneChecker.getZones();
         int totalPages = Math.max(1, (int) Math.ceil((double) zones.size() / PAGE_SLOTS));
+        // Ramène la page dans les limites, notamment après la suppression de la dernière zone d'une page.
         page = Math.max(0, Math.min(page, totalPages - 1));
 
         int debut = page * PAGE_SLOTS;
@@ -220,7 +223,7 @@ public class AtmoMenu {
         playerPage.put(player.getUniqueId(), page);
     }
 
-    // Crée un item représentant une zone dans le menu.
+    // La carte affiche le nom utilisé par MenuListener, puis résume les coordonnées et les réglages audio.
     private ItemStack createZoneItem(ZoneClass zone) {
         ItemStack item = new ItemStack(Material.MAP);
         ItemMeta meta = item.getItemMeta();

@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Maintient les zones en mémoire et détermine laquelle s'applique à la position d'un joueur. */
 public class ZoneChecker {
 
     private final List<ZoneClass> zones = new ArrayList<>();
 
+    /** Remplace le contenu en mémoire par les zones présentes dans area.yml. */
     public void loadZones(File dataFolder) {
 
         zones.clear();
@@ -44,10 +46,12 @@ public class ZoneChecker {
 
     public List<ZoneClass> getZones() { return zones; }
 
+    /** Recherche un nom sans distinguer les majuscules ; renvoie null s'il est introuvable. */
     public ZoneClass getZoneByName(String name) {
         return zones.stream().filter(zone -> zone.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
+    /** Retire la section YAML puis la zone en mémoire ; les erreurs de sauvegarde sont journalisées. */
     public void deleteZone(File dataFolder, String name) {
         File file = new File(dataFolder, "area.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -63,10 +67,14 @@ public class ZoneChecker {
         zones.removeIf(zone -> zone.getName().equalsIgnoreCase(name));
     }
 
+    /**
+     * Retient la zone contenant le joueur avec la plus grande priorité numérique.
+     * À priorité égale, la première zone chargée reste sélectionnée ; hors zone, renvoie null.
+     */
     public ZoneClass getPlayerZone(org.bukkit.entity.Player player) {
         ZoneClass bestZone = null;
 
-        for (ZoneClass zone : zones) { //loop les zones
+        for (ZoneClass zone : zones) {
             if (zone.contains(player.getLocation())) {
                 if (bestZone == null || zone.getPriority() > bestZone.getPriority()) {
                     bestZone = zone;

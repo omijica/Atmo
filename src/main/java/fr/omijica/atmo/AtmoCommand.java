@@ -18,6 +18,7 @@ import java.util.*;
 
 import static fr.omijica.atmo.MessageUtils.playSound;
 
+/** Exécute les sous-commandes /atmo et propose une autocomplétion adaptée aux permissions. */
 public class AtmoCommand implements CommandExecutor, TabExecutor {
 
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
@@ -27,6 +28,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
     private BlockSoundClass.BlockSoundData blockSoundData;
     private ConfigClass.GeneralConfigData generalConfigData;
 
+    /** Charge les sources à positions fixes et les autorisations audio utilisées par les commandes. */
     public AtmoCommand(Atmo plugin, ZoneChecker zoneChecker) {
         this.plugin = plugin;
         this.zoneChecker = zoneChecker;
@@ -35,6 +37,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         this.generalConfigData = plugin.getConfigClass().loadBaseConfig(plugin.getDataFolder());
     }
 
+    /** Vérifie l'accès du joueur, puis traite la sous-commande demandée. */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
@@ -43,6 +46,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             return true;
         }
 
+        // La permission d'administration donne accès à toutes les sous-commandes.
         if (!player.hasPermission("atmo.admin")) {
             if (!player.hasPermission("atmo.use")) {
                 MessageUtils.sendError(player, "You do not have permission to use this command.");
@@ -79,6 +83,8 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 }
                 UUID uuid = player.getUniqueId();
 
+                // Cette collection appartient à la commande ; les sélections de blocs sont
+                // conservées séparément par ZoneListener.
                 if (activeSessions.containsKey(uuid)) {
                     activeSessions.remove(player.getUniqueId());
                     MessageUtils.sendInfo(player, "You have exited edit mode.");
@@ -112,6 +118,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                         return true;
                     }
                 }
+                // Recharge les différentes vues de la configuration pour aligner commandes et sons.
                 zoneChecker.loadZones(plugin.getDataFolder());
                 plugin.getSoundManager().reload();
                 this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
@@ -151,6 +158,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     FileConfiguration config = YamlConfiguration.loadConfiguration(file);
                     String path = "blockSound.positions." + arg2 + ".locations";
 
+                    // Ajoute la position à la liste existante sans remplacer les autres sources.
                     String playerLoc = serializeLocation(player.getLocation());
                     List<String> locations = config.getStringList(path);
                     locations.add(playerLoc);
@@ -187,6 +195,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     }
                 }
 
+                // Convention du stockage actuel : true signifie que le joueur a désactivé la musique.
                 boolean current = AtmoPlayerData.isMusicEnabled(player);
                 boolean newValue = !current;
 
@@ -209,6 +218,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     }
                 }
 
+                // Même convention pour l'ambiance : basculer vers true désactive ce canal.
                 boolean current2 = AtmoPlayerData.isAmbientEnabled(player);
                 boolean newValue2 = !current2;
 
@@ -234,7 +244,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
 
                 String volumeType = args[1].toLowerCase();
 
-                // Gestion du sous-ordre "show"
+                // Affiche les deux volumes personnels sans modifier les données du joueur.
                 if (volumeType.equals("show")) {
                     int musicVol = AtmoPlayerData.getMusicVolume(player);
                     int ambientVol = AtmoPlayerData.getAmbientVolume(player);
@@ -248,7 +258,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                // Vérification de la présence de la valeur numérique
+                // Exige un entier entre 0 et 100 avant toute écriture des préférences.
                 if (args.length < 3) {
                     MessageUtils.sendError(player, "Usage: /atmo volume " + volumeType + " <0-100>");
                     return true;
@@ -273,6 +283,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     AtmoPlayerData.setAmbientVolume(player, volume);
                 }
 
+                // Actualise le cache et coupe les sons suivis pour appliquer le volume aux prochaines lectures.
                 plugin.getSoundManager().refreshPlayerVolume(player);
                 MessageUtils.sendSuccess(player, "Volume for " + volumeType + " set to " + volume + "%.");
                 break;
@@ -285,6 +296,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         return true;
     }
 
+    /** Filtre les suggestions selon le début saisi et les permissions du joueur. */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
 
@@ -317,6 +329,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         return completions;
     }
 
+    /** Liste commune à l'aide et aux suggestions, incluant les autorisations globales pour l'audio. */
     private List<String> getAvailableSubCommands(Player player) {
         List<String> subCommands = new ArrayList<>();
 
@@ -350,6 +363,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         return subCommands;
     }
 
+    // Sert uniquement à colorer les commandes de gestion dans l'aide ; les permissions sont vérifiées ailleurs.
     private static final Set<String> ADMIN_SUBCOMMANDS = Set.of("reload", "addloc", "menu", "editor", "info");
 
     private static final Map<String, String> SUBCOMMAND_DESCRIPTIONS = Map.of(
@@ -363,6 +377,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             "volume", "<music | ambient | show> [0-100] Sets the volume"
     );
 
+    /** Affiche les commandes accessibles, leur description et une couleur selon leur usage. */
     private void sendUsage(Player player) {
         List<String> available = getAvailableSubCommands(player);
 
@@ -388,6 +403,7 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         return ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                              " + ChatColor.RESET;
     }
 
+    /** Produit le format « monde, x, y, z » lu ensuite par SoundManager pour les sources fixes. */
     private String serializeLocation(Location loc) {
         if (loc == null || loc.getWorld() == null) return null;
 

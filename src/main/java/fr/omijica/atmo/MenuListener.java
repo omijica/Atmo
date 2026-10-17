@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+/** Relie les clics dans les inventaires Atmo aux actions de création et de gestion des zones. */
 public class MenuListener implements Listener {
 
     private final Atmo plugin;
@@ -20,6 +21,7 @@ public class MenuListener implements Listener {
         this.plugin = plugin;
     }
 
+    /** Identifie le menu par son titre et réserve les clics à ses boutons. */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
 
@@ -27,6 +29,7 @@ public class MenuListener implements Listener {
             return;
         }
 
+        // Retire les styles Adventure pour comparer le texte aux titres définis dans AtmoMenu.
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         if (title.equals("Atmo Menu")) {
             event.setCancelled(true);
@@ -50,6 +53,7 @@ public class MenuListener implements Listener {
 
                 if (meta != null && meta.hasDisplayName()) {
                     Component displayNameComponent = meta.displayName();
+                    // Le nom affiché sur la carte correspond au nom de la zone à éditer.
                     String name = PlainTextComponentSerializer.plainText().serialize(displayNameComponent);
 
                     plugin.getAtmoMenu().openZoneEditMenu(player, name);
@@ -57,6 +61,7 @@ public class MenuListener implements Listener {
                 }
             }
 
+            // L'index brut distingue les boutons du menu des cases de l'inventaire du joueur.
             int activeSlot = event.getRawSlot();
             int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);
 
@@ -81,7 +86,7 @@ public class MenuListener implements Listener {
                 return;
             }
 
-            // Slot 11: Teleport
+            // Case 11 : téléportation au centre calculé de la zone.
             if (slot == 11) {
                 Location target = zone.getCenterLocation();
                 if (target != null) {
@@ -93,13 +98,13 @@ public class MenuListener implements Listener {
                 player.closeInventory();
 
             }
-            // Slot 13: Redefine
+            // Case 13 : nouvelle sélection des deux coins pour la zone existante.
             else if (slot == 13) {
                 plugin.getZoneListener().enableCreationMode(player, zoneName);
                 MessageUtils.playClick(player);
                 player.closeInventory();
             }
-            // Slot 15: Delete
+            // Case 15 : suppression puis retour à la page consultée.
             else if (slot == 15) {
                 plugin.getZoneChecker().deleteZone(plugin.getDataFolder(), zoneName);
                 MessageUtils.sendSuccess(player, "Zone " + zoneName + " deleted!");
@@ -107,7 +112,7 @@ public class MenuListener implements Listener {
                 int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);
                 plugin.getAtmoMenu().openPaperMenu(player, activePage);
             }
-            // Slot 18: Back
+            // Case 18 : retour à la liste des zones.
             else if (slot == 18) {
                 int activePage = plugin.getAtmoMenu().getPlayerPage().getOrDefault(player.getUniqueId(), 0);
                 plugin.getAtmoMenu().openPaperMenu(player, activePage);

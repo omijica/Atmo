@@ -17,10 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/** Transforme les clics sur des blocs en sélections de zones, puis enregistre leurs limites. */
 public class ZoneListener implements Listener {
 
     private final Atmo plugin;
     private final ZoneChecker zoneChecker;
+    // Chaque joueur dispose de sa propre sélection, supprimée une fois terminée ou à sa déconnexion.
     private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
 
     public ZoneListener(Atmo plugin, ZoneChecker zoneChecker) {
@@ -28,6 +30,7 @@ public class ZoneListener implements Listener {
         this.zoneChecker = zoneChecker;
     }
 
+    /** Commence une nouvelle sélection, y compris pour redéfinir les limites d'une zone existante. */
     public void enableCreationMode(Player player, String zoneName) {
         activeSessions.put(player.getUniqueId(), new ZoneCreationSession(zoneName));
         MessageUtils.sendInfo(player, "Edit mode enabled for: <white>" + zoneName + " <gray>(/atmo editor to exit)");
@@ -35,6 +38,7 @@ public class ZoneListener implements Listener {
         MessageUtils.sendMessage(player, "<gray>- <white>Right-click <gray>on a block: Position 2");
     }
 
+    /** Réserve les clics gauche et droit aux deux coins pendant une session d'édition. */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -46,6 +50,7 @@ public class ZoneListener implements Listener {
         ZoneCreationSession session = activeSessions.get(uuid);
         Location clickedLocation = event.getClickedBlock().getLocation();
 
+        // Annule l'action normale sur le bloc pour que le clic serve à la sélection.
         if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
             event.setCancelled(true);
             session.setPos1(clickedLocation);
@@ -62,6 +67,7 @@ public class ZoneListener implements Listener {
         }
     }
 
+    /** Attend les deux coins dans un même monde avant de demander la sauvegarde et de fermer la session. */
     private void checkLoc(Player player, ZoneCreationSession session) {
         if (session.isComplete()) {
             if (!session.getPos1().getWorld().equals(session.getPos2().getWorld())) {
@@ -81,6 +87,7 @@ public class ZoneListener implements Listener {
         return loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
     }
 
+    /** Met à jour les coordonnées dans area.yml et recharge la liste des zones en mémoire. */
     private void saveZoneToYml(ZoneCreationSession session) {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
@@ -113,6 +120,8 @@ public class ZoneListener implements Listener {
         config.set(path + "pos2.y", p2.getBlockY());
         config.set(path + "pos2.z", p2.getBlockZ());
 
+        // Lors d'une redéfinition, conserve les réglages audio et la priorité déjà présents.
+        // Pour une nouvelle zone, initialise les valeurs manquantes avec les sons désactivés.
         if (!config.contains(path + "priority")) {
             config.set(path + "priority", 1);
         }
@@ -145,6 +154,7 @@ public class ZoneListener implements Listener {
         zoneChecker.loadZones(plugin.getDataFolder());
     }
 
+    /** Libère la sélection inachevée lorsque le joueur quitte le serveur. */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         activeSessions.remove(event.getPlayer().getUniqueId());

@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+/** Décrit une zone rectangulaire en trois dimensions, sa priorité et ses réglages audio. */
 public class ZoneClass {
 
     private final String name;
@@ -18,6 +19,7 @@ public class ZoneClass {
     private final int musicVolume;
     private final int musicDuration;
 
+    /** Accepte les deux coins dans n'importe quel ordre et calcule les limites de chaque axe. */
     public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled, String musicName, boolean musicEnabled, int musicVolume, int musicDuration) {
         this.name = name;
         this.world = world;
@@ -36,6 +38,7 @@ public class ZoneClass {
         this.musicDuration = musicDuration;
     }
 
+    /** Vérifie le monde puis les limites, en ajoutant un bloc aux coordonnées maximales. */
     public boolean contains(org.bukkit.Location loc) {
 
         if (!loc.getWorld().getName().equals(world)) {
@@ -65,6 +68,10 @@ public class ZoneClass {
     public int getMusicDuration() {return musicDuration;}
 
 
+    /**
+     * Calcule la destination du bouton de téléportation, avec un décalage de 0,5 bloc en X et Z.
+     * Renvoie null si le monde de la zone n'est pas chargé ; la sécurité du terrain n'est pas vérifiée.
+     */
     public Location getCenterLocation() {
         World world = Bukkit.getWorld(this.world);
         if (world == null) return null;

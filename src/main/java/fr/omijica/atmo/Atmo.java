@@ -5,6 +5,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 
+/**
+ * Point d'entrée du plugin Paper : prépare les fichiers, les services et les événements,
+ * puis lance la mise à jour périodique des sons pour les joueurs connectés.
+ */
 public final class Atmo extends JavaPlugin {
 
     private ZoneListener zoneListener;
@@ -23,9 +27,10 @@ public final class Atmo extends JavaPlugin {
             getDataFolder().mkdirs();
         }
 
-        // Save default configuration files if they don't exist
+        // Copie les configurations fournies dans le JAR uniquement si elles sont absentes.
         saveDefaultFiles();
 
+        // L'intégration aux meubles personnalisés reste facultative.
         itemsAdderEnabled = Bukkit.getPluginManager().isPluginEnabled("ItemsAdder");
         if (itemsAdderEnabled) {
             String gradientName = ansiGradient("ItemsAdder", 255, 105, 180, 148, 0, 211); // rose -> violet
@@ -35,6 +40,7 @@ public final class Atmo extends JavaPlugin {
             getLogger().info(gradientName + aqua + " dependency found and initialized." + reset);
         }
 
+        // Crée d'abord les services dont dépendent le moteur sonore, les menus et les commandes.
         this.zoneChecker = new ZoneChecker();
         this.ambient = new Ambient();
         this.soundManager = new SoundManager(this);
@@ -42,6 +48,7 @@ public final class Atmo extends JavaPlugin {
         this.atmoMenu = new AtmoMenu(this.zoneChecker);
         this.configClass = new ConfigClass();
         this.blockSoundClass = new BlockSoundClass();
+        // Les clés de stockage doivent exister avant la première lecture des préférences.
         AtmoPlayerData.init(this);
 
         if (getCommand("atmo") != null) {
@@ -54,6 +61,7 @@ public final class Atmo extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MenuListener(this), this);
         getServer().getPluginManager().registerEvents(this.zoneListener, this);
 
+        // Charge les zones avant de lancer la boucle sonore, qui les consultera à chaque passage.
         zoneChecker.loadZones(getDataFolder());
         getLogger().info("AtmoPlugin enabled !");
 
@@ -62,6 +70,7 @@ public final class Atmo extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Demande l'arrêt des sons suivis par le moteur lors de la désactivation du plugin.
         this.soundManager.stop();
         getLogger().info("AtmoPlugin disabled !");
     }
@@ -90,6 +99,7 @@ public final class Atmo extends JavaPlugin {
 
     public BlockSoundClass getBlockSoundClass() {return this.blockSoundClass;}
 
+    /** Préserve les réglages existants en ne créant que les fichiers manquants. */
     private void saveDefaultFiles() {
         String[] files = {"area.yml", "ambient.yml", "blockSound.yml", "config.yml"};
         for (String fileName : files) {
@@ -100,6 +110,7 @@ public final class Atmo extends JavaPlugin {
         }
     }
 
+    /** Applique un dégradé RVB au texte destiné à la console, caractère par caractère. */
     private String ansiGradient(String text, int fromR, int fromG, int fromB, int toR, int toG, int toB) {
         StringBuilder sb = new StringBuilder();
         int length = text.length();

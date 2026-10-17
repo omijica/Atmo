@@ -9,8 +9,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lit blockSound.yml et sépare les sources liées à des entités des sources à coordonnées fixes.
+ * Les probabilités vont de 0 à 1, les délais sont en secondes et les rayons en blocs.
+ */
 public class BlockSoundClass {
 
+    /**
+     * Source attachée à une entité Bukkit ou à un meuble ItemsAdder selon type.
+     * Pour un porte-armure, customModelData filtre le casque ; 0 désactive ce filtre.
+     */
     public record EntityEntry(
             String entity,
             int customModelData,
@@ -39,6 +47,7 @@ public class BlockSoundClass {
         public String getType() {return type;}
     }
 
+    /** Source partageant les mêmes réglages pour une liste de positions « monde, x, y, z ». */
     public record PositionEntry(
             String sound,
             int radius,
@@ -63,6 +72,7 @@ public class BlockSoundClass {
         public List<String> getLocations() { return locations; }
     }
 
+    /** Regroupe les deux types de sources, chacun indexé par le nom de son entrée YAML. */
     public record BlockSoundData(
             Map<String, EntityEntry> entities,
             Map<String, PositionEntry> positions
@@ -71,10 +81,12 @@ public class BlockSoundClass {
         public Map<String, PositionEntry> getPositions() { return positions; }
     }
 
+    /** Charge les entrées disponibles ; une section absente produit une collection vide. */
     public static BlockSoundData load(File dataFolder) {
         File file = new File(dataFolder, "blockSound.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
+        // Conserve l'ordre du fichier pour parcourir les sources dans un ordre prévisible.
         Map<String, EntityEntry> entities = new LinkedHashMap<>();
         Map<String, PositionEntry> positions = new LinkedHashMap<>();
 
@@ -84,6 +96,7 @@ public class BlockSoundClass {
                 ConfigurationSection entrySection = blocksSection.getConfigurationSection(key);
                 if (entrySection == null) continue;
 
+                // Accepte les deux graphies présentes dans les configurations : Entity et entity.
                 String entity = entrySection.getString("Entity", entrySection.getString("entity", ""));
                 int customModelData = entrySection.getInt("customModelData", 0);
                 int radius = entrySection.getInt("radius", 5);
@@ -120,6 +133,7 @@ public class BlockSoundClass {
                 double pitchBase = entrySection.getDouble("pitchBase", 1.0);
                 boolean enabled = entrySection.getBoolean("enabled", false);
 
+                // Les coordonnées seront converties en positions Bukkit par le moteur sonore.
                 List<String> locations = entrySection.getStringList("locations");
                 if (locations == null) locations = new ArrayList<>();
 

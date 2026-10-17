@@ -9,8 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Charge les profils d'ambiance d'ambient.yml, composés d'un fond et de sons aléatoires. */
 public class Ambient {
 
+    /**
+     * Son ponctuel : probabilité entre 0 et 1, délais en secondes et volume multiplicateur.
+     * La hauteur varie autour de pitchBase dans la limite de pitchVariation.
+     */
     public record RandomSoundData (
             String sound,
             double chance,
@@ -21,6 +26,7 @@ public class Ambient {
             double pitchBase
     ) {}
 
+    /** Son de fond, intervalle de répétition en secondes et liste des sons ponctuels associés. */
     public record AmbientData(
             String backgroundSound,
             double backgroundVolume,
@@ -28,6 +34,7 @@ public class Ambient {
             List<RandomSoundData> randomSounds
     ) {}
 
+    /** Indexe les profils par leur nom, utilisé ensuite dans area.yml et config.yml. */
     public static Map<String, AmbientData> load(File dataFolder) {
         File file = new File(dataFolder, "ambient.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -47,6 +54,7 @@ public class Ambient {
             double bgVolume = section.getDouble("background_volume");
             int bgInterval = section.getInt("background_interval");
 
+            // Les nombres YAML peuvent être entiers ou décimaux : les conversions acceptent les deux.
             List<RandomSoundData> randomSounds = new ArrayList<>();
             List<Map<?, ?>> rawList = section.getMapList("random_sounds");
             for (Map<?, ?> map : rawList) {
@@ -61,6 +69,7 @@ public class Ambient {
                 randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation, pitchBase));
             }
 
+            // Fige la liste pour que le moteur sonore ne puisse pas la modifier après le chargement.
             ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, List.copyOf(randomSounds)));
         }
 
@@ -83,7 +92,7 @@ public class Ambient {
         return defaultValue;
     }
 
-    // Convertit en boolean, avec une valeur par défaut si absent/invalide
+    // Lit une valeur booléenne, avec une valeur par défaut si elle est absente ou invalide.
     private static boolean toBoolean(Object raw, boolean defaultValue) {
         if (raw instanceof Boolean bool) {
             return bool;

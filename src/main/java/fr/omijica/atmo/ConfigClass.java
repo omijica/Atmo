@@ -7,8 +7,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Lit les options globales et les réglages sonores appliqués en dehors des zones définies. */
 public class ConfigClass {
 
+    /** Activation de l'ambiance et nom du profil correspondant dans ambient.yml. */
     public record AmbientSettings(
             boolean enabled,
             String name
@@ -17,6 +19,7 @@ public class ConfigClass {
         public String getName() { return name; }
     }
 
+    /** Réglages musicaux : clé du son, volume en pourcentage et durée en secondes. */
     public record MusicSettings(
             boolean enabled,
             String name,
@@ -29,6 +32,7 @@ public class ConfigClass {
         public int getDuration() { return duration; }
     }
 
+    /** Ambiance et musique de repli, limitées aux mondes explicitement listés. */
     public record GeneralAreaData(
             AmbientSettings ambient,
             MusicSettings music,
@@ -39,6 +43,7 @@ public class ConfigClass {
         public List<String> getWorlds() { return worlds; }
     }
 
+    /** Charge config.general_area ; une section absente désactive les sons de repli. */
     public static GeneralAreaData load(File dataFolder) {
         File file = new File(dataFolder, "config.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -69,6 +74,10 @@ public class ConfigClass {
         );
     }
 
+    /**
+     * Charge les autorisations globales de désactivation des canaux audio.
+     * Par défaut, chaque joueur peut les désactiver sans permission spécifique.
+     */
     public static GeneralConfigData loadBaseConfig(File dataFolder) {
         File file = new File(dataFolder, "config.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -85,6 +94,7 @@ public class ConfigClass {
         return new GeneralConfigData(allowPlayerDisableMusic, allowPlayerDisableAmbient);
     }
 
+    /** Options consultées par les commandes music et ambient et par leur autocomplétion. */
     public record GeneralConfigData(
             boolean allowPlayerDisableMusic,
             boolean allowPlayerDisableAmbient
