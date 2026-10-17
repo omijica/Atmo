@@ -29,11 +29,17 @@ public final class Atmo extends JavaPlugin {
 
         Path ambientFolder = getDataFolder().toPath().resolve("Ambient");
 
-        try {
-            Files.createDirectories(ambientFolder);
-        } catch (IOException e) {
-            getLogger().severe("Unable to create the folder: " + e.getMessage());
+        if (!Files.exists(ambientFolder)) {
+            try {
+                Files.createDirectories(ambientFolder);
+            } catch (IOException e) {
+                getLogger().severe("Unable to create the folder: " + e.getMessage());
+            }
+
+            new ConvertAmbient().convert(getDataFolder());
+
         }
+
 
         // Copie les configurations fournies dans le JAR uniquement si elles sont absentes.
         saveDefaultFiles();
