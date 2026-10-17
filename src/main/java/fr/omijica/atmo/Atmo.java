@@ -4,6 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Point d'entrée du plugin Paper : prépare les fichiers, les services et les événements,
@@ -22,6 +25,14 @@ public final class Atmo extends JavaPlugin {
 
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();
+        }
+
+        Path ambientFolder = getDataFolder().toPath().resolve("Ambient");
+
+        try {
+            Files.createDirectories(ambientFolder);
+        } catch (IOException e) {
+            getLogger().severe("Unable to create the folder: " + e.getMessage());
         }
 
         // Copie les configurations fournies dans le JAR uniquement si elles sont absentes.

@@ -43,40 +43,44 @@ public final class Ambient {
 
     /** Indexe les profils par leur nom, utilisé ensuite dans area.yml et config.yml. */
     public static Map<String, AmbientData> load(File dataFolder) {
-        File file = new File(dataFolder, "ambient.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        File folder = new File(dataFolder, "ambient");
+        File[] files = folder.listFiles(file -> file.isFile() && file.getName().endsWith(".yml"));
         Map<String, AmbientData> ambiances = new HashMap<>();
 
-        for (String key : config.getKeys(false)) {
-            if (!config.isConfigurationSection(key)) {
-                continue;
+        for (File file : files) {
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+            for (String key : config.getKeys(false)) {
+                if (!config.isConfigurationSection(key)) {
+                    continue;
+                }
+
+                ConfigurationSection section = config.getConfigurationSection(key);
+                if (section == null) {
+                    continue;
+                }
+
+                String bgSound = section.getString("background_sound");
+                double bgVolume = section.getDouble("background_volume");
+                int bgInterval = section.getInt("background_interval");
+
+                List<RandomSoundData> randomSounds = new ArrayList<>();
+                List<Map<?, ?>> rawList = section.getMapList("random_sounds");
+                for (Map<?, ?> map : rawList) {
+                    String sound = (String) map.get("sound");
+                    double chance = toDouble(map.get("chance"), 0.0);
+                    int minDelay = toInt(map.get("min_delay"), 0);
+                    int maxDelay = toInt(map.get("max_delay"), 0);
+                    double volume = toDouble(map.get("volume"), 1.0);
+                    double pitchVariation = toDouble(map.get("pitch_variation"), 0.0);
+                    double pitchBase = toDouble(map.get("pitch_base"), 1.0);
+
+                    randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation, pitchBase));
+                }
+
+                ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, randomSounds));
             }
-
-            ConfigurationSection section = config.getConfigurationSection(key);
-            if (section == null) {
-                continue;
-            }
-
-            String bgSound = section.getString("background_sound");
-            double bgVolume = section.getDouble("background_volume");
-            int bgInterval = section.getInt("background_interval");
-
-            // Les nombres YAML peuvent être entiers ou décimaux : les conversions acceptent les deux.
-            List<RandomSoundData> randomSounds = new ArrayList<>();
-            List<Map<?, ?>> rawList = section.getMapList("random_sounds");
-            for (Map<?, ?> map : rawList) {
-                String sound = (String) map.get("sound");
-                double chance = toDouble(map.get("chance"), 0.0);
-                int minDelay = toInt(map.get("min_delay"), 0);
-                int maxDelay = toInt(map.get("max_delay"), 0);
-                double volume = toDouble(map.get("volume"), 1.0);
-                double pitchVariation = toDouble(map.get("pitch_variation"), 0.0);
-                double pitchBase = toDouble(map.get("pitch_base"), 1.0);
-
-                randomSounds.add(new RandomSoundData(sound, chance, minDelay, maxDelay, volume, pitchVariation, pitchBase));
-            }
-
-            ambiances.put(key, new AmbientData(bgSound, bgVolume, bgInterval, randomSounds));
         }
 
         return Collections.unmodifiableMap(ambiances);
