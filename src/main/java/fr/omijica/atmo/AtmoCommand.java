@@ -1,5 +1,6 @@
 package fr.omijica.atmo;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -14,7 +15,9 @@ import org.bukkit.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 import static fr.omijica.atmo.MessageUtils.playSound;
 
@@ -287,6 +290,52 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 plugin.getSoundManager().refreshPlayerVolume(player);
                 MessageUtils.sendSuccess(player, "Volume for " + volumeType + " set to " + volume + "%.");
                 break;
+
+            case "enable": {
+                if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.enable") ){
+                    MessageUtils.sendError(player, "You do not have permission to use this command.");
+                    return true;
+                }
+
+                if (args.length < 2) {
+                    MessageUtils.sendError(player, "Usage: /atmo enable <player> <zone>");
+                    return true;
+                }
+
+                Player target = Bukkit.getPlayerExact(args[2]);
+
+                try {
+                    plugin.getDatabase().addPlayer(args[3], target.getUniqueId());
+                } catch (SQLException exception) {
+                    plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
+                }
+
+                MessageUtils.sendSuccess(player, "Zone enabled for" + target + ".");
+                break;
+            }
+
+            case "disable": {
+                if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.disable")) {
+                    MessageUtils.sendError(player, "You do not have permission to use this command.");
+                    return true;
+                }
+
+                if (args.length < 2) {
+                    MessageUtils.sendError(player, "Usage: /atmo disable <player> <zone>");
+                    return true;
+                }
+
+                Player target = Bukkit.getPlayerExact(args[2]);
+
+                try {
+                    plugin.getDatabase().removePlayer(args[3], target.getUniqueId());
+                } catch (SQLException exception) {
+                    plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
+                }
+
+                MessageUtils.sendSuccess(player, "Zone disabled for" + target + ".");
+                break;
+            }
 
             default:
                 sendUsage(player);

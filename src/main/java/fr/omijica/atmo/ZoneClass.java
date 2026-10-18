@@ -4,6 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+import java.util.*;
+
 /** Décrit une zone rectangulaire en trois dimensions, sa priorité et ses réglages audio. */
 public class ZoneClass {
 
@@ -18,9 +20,10 @@ public class ZoneClass {
     private final boolean musicEnabled;
     private final int musicVolume;
     private final int musicDuration;
+    private final boolean activationPerPlayer;
 
     /** Accepte les deux coins dans n'importe quel ordre et calcule les limites de chaque axe. */
-    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled, String musicName, boolean musicEnabled, int musicVolume, int musicDuration) {
+    public ZoneClass(String name, String world, double x1, double y1, double z1, double x2, double y2, double z2, int priority, String ambientName, boolean ambientEnabled, String musicName, boolean musicEnabled, int musicVolume, int musicDuration, boolean activationPerPlayer) {
         this.name = name;
         this.world = world;
         this.minX = Math.min(x1, x2);
@@ -36,6 +39,7 @@ public class ZoneClass {
         this.musicEnabled = musicEnabled;
         this.musicVolume = musicVolume;
         this.musicDuration = musicDuration;
+        this.activationPerPlayer = activationPerPlayer;
     }
 
     /** Vérifie le monde puis les limites, en ajoutant un bloc aux coordonnées maximales. */
@@ -82,6 +86,7 @@ public class ZoneClass {
 
         return new Location(world, centerX + 0.5, centerY, centerZ + 0.5);
     }
+
 }
 
 

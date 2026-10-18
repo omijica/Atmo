@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
+import java.util.logging.Level;
 
 /**
  * Point d'entrée du plugin Paper : prépare les fichiers, les services et les événements,
@@ -19,6 +21,7 @@ public final class Atmo extends JavaPlugin {
     private AtmoMenu atmoMenu;
     private SoundManager soundManager;
     private boolean itemsAdderEnabled = false;
+    private Database database;
 
     @Override
     public void onEnable() {
@@ -37,7 +40,18 @@ public final class Atmo extends JavaPlugin {
             }
 
             new ConvertAmbient().convert(getDataFolder());
+            getLogger().info("The plugin has converted the ‘ambient’ files to the new format. (1.0.1)");
 
+        }
+
+        database = new Database(this);
+
+        try {
+            database.initialise();
+            getLogger().info("The SQLite database has been initialised!");
+        } catch (IOException | SQLException error ) {
+            getLogger().log(Level.SEVERE, "Unable to initialise SQLite.", error);
+            getServer().getPluginManager().disablePlugin(this);
         }
 
 
@@ -126,5 +140,9 @@ public final class Atmo extends JavaPlugin {
                     .append(text.charAt(i));
         }
         return sb.toString();
+    }
+
+    public Database getDatabase() {
+        return database;
     }
 }

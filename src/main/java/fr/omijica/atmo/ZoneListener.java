@@ -143,6 +143,9 @@ public class ZoneListener implements Listener {
         if (!config.contains(path + "ambient.name")) {
             config.set(path + "ambient.name", "");
         }
+        if (!config.contains(path + "activationPerPlayer")) {
+            config.set(path + "activationPerPlayer", false);
+        }
 
         try {
             config.save(file);
