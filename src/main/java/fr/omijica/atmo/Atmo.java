@@ -52,6 +52,7 @@ public final class Atmo extends JavaPlugin {
         } catch (IOException | SQLException error ) {
             getLogger().log(Level.SEVERE, "Unable to initialise SQLite.", error);
             getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
 
@@ -96,7 +97,9 @@ public final class Atmo extends JavaPlugin {
     @Override
     public void onDisable() {
         // Demande l'arrêt des sons suivis par le moteur lors de la désactivation du plugin.
-        this.soundManager.stop();
+        if (this.soundManager != null) {
+            this.soundManager.stop();
+        }
         getLogger().info("AtmoPlugin disabled !");
     }
 
@@ -118,7 +121,7 @@ public final class Atmo extends JavaPlugin {
 
     /** Préserve les réglages existants en ne créant que les fichiers manquants. */
     private void saveDefaultFiles() {
-        String[] files = {"area.yml", "ambient.yml", "blockSound.yml", "config.yml"};
+        String[] files = {"area.yml", "blockSound.yml", "config.yml"};
         for (String fileName : files) {
             File file = new File(getDataFolder(), fileName);
             if (!file.exists()) {

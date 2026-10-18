@@ -1,5 +1,6 @@
 package fr.omijica.atmo;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -17,7 +18,7 @@ public class Database {
 
     public Database(JavaPlugin plugin) {
         file = new File(plugin.getDataFolder(), "data.db");
-        resolve = "jdbc:sqlite" + file.getAbsolutePath();
+        resolve = "jdbc:sqlite:" + file.getAbsolutePath();
     }
 
     public void initialise() throws IOException, SQLException {
@@ -76,5 +77,33 @@ public class Database {
         }
 
         return players;
+    }
+
+    public void debug(CommandSender sender) throws SQLException {
+        String sql = "SELECT zone, uuid FROM zone_players ORDER BY zone, uuid";
+
+        try (Connection connection = DriverManager.getConnection(resolve);
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet results = statement.executeQuery()) {
+
+            sender.sendMessage("[SQLite DEBUG] Table: zone_players");
+
+            boolean empty = true;
+
+            while (results.next()) {
+                empty = false;
+
+                sender.sendMessage(
+                        "[SQLite DEBUG] Zone: " + results.getString("zone")
+                                + " | UUID: " + results.getString("uuid")
+                );
+            }
+
+            if (empty) {
+                sender.sendMessage("[SQLite DEBUG] The table is empty.");
+            }
+
+            sender.sendMessage("[SQLite DEBUG] End.");
+        }
     }
 }

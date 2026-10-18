@@ -302,12 +302,19 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                Player target = Bukkit.getPlayerExact(args[2]);
+                Player target = Bukkit.getPlayerExact(args[1]);
+
+                if (target == null) {
+                    MessageUtils.sendError(player, "Player not found or offline.");
+                    return true;
+                }
 
                 try {
-                    plugin.getDatabase().addPlayer(args[3], target.getUniqueId());
+                    plugin.getDatabase().addPlayer(args[2], target.getUniqueId());
+                    plugin.getDatabase().debug(player);
                 } catch (SQLException exception) {
                     plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
+                    return true;
                 }
 
                 MessageUtils.sendSuccess(player, "Zone enabled for" + target + ".");
@@ -325,12 +332,19 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                Player target = Bukkit.getPlayerExact(args[2]);
+                Player target = Bukkit.getPlayerExact(args[1]);
+
+                if (target == null) {
+                    MessageUtils.sendError(player, "Player not found or offline.");
+                    return true;
+                }
 
                 try {
-                    plugin.getDatabase().removePlayer(args[3], target.getUniqueId());
+                    plugin.getDatabase().removePlayer(args[2], target.getUniqueId());
+                    plugin.getDatabase().debug(player);
                 } catch (SQLException exception) {
                     plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
+                    return true;
                 }
 
                 MessageUtils.sendSuccess(player, "Zone disabled for" + target + ".");
