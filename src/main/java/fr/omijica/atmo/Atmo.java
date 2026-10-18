@@ -27,7 +27,7 @@ public final class Atmo extends JavaPlugin {
             getDataFolder().mkdirs();
         }
 
-        Path ambientFolder = getDataFolder().toPath().resolve("Ambient");
+        Path ambientFolder = getDataFolder().toPath().resolve("ambient");
 
         if (!Files.exists(ambientFolder)) {
             try {

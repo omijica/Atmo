@@ -1,5 +1,5 @@
 name: Atmo
-version: '1.0'
+version: '1.0.1'
 main: fr.omijica.atmo.Atmo
 api-version: '1.20'
 authors: [ omijica ]
