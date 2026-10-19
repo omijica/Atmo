@@ -31,7 +31,7 @@ config:
     ambient:
       # Whether ambient sounds are enabled by default.
       enabled: true
-      # Ambient profile to use, as defined in ambient.yml.
+      # Profile key to use, as defined in a .yml file inside ambient/.
       name: field
 
     music:

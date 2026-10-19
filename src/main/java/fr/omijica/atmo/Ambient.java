@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Charge les profils d'ambiance d'ambient.yml, composés d'un fond et de sons aléatoires. */
+/** Charge les profils des fichiers .yml d'ambient/, composés d'un fond et de sons aléatoires. */
 public final class Ambient {
 
     private Ambient() {}

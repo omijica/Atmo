@@ -1,20 +1,19 @@
 package fr.omijica.atmo;
 
-import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.*;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class Database {
 
     private final File file;
     private final String resolve;
+    private final Map<String, Set<UUID>> zonePlayers = new HashMap<>();
 
     public Database(JavaPlugin plugin) {
         file = new File(plugin.getDataFolder(), "data.db");
@@ -26,8 +25,8 @@ public class Database {
 
         try (Connection connection = DriverManager.getConnection(resolve); Statement query = connection.createStatement()) {
 
-            query.executeUpdate("CREATE TABLE IF NOT EXISTS zone_players (" + "zone TEXT NOT NULL, " + "uuid TEXT NOT NULL, " + "PRIMARY KEY (zone, uuid)" + ")"
-            );
+            query.executeUpdate("CREATE TABLE IF NOT EXISTS zone_players (" + "zone TEXT NOT NULL, " + "uuid TEXT NOT NULL, " + "PRIMARY KEY (zone, uuid)" + ")");
+            loadCache();
         }
     }
 
@@ -41,6 +40,7 @@ public class Database {
             statement.setString(2, playerUuid.toString());
 
             statement.executeUpdate();
+            zonePlayers.computeIfAbsent(zoneName, key -> new HashSet<>()).add(playerUuid);
         }
     }
 
@@ -55,55 +55,34 @@ public class Database {
             statement.setString(2, playerUuid.toString());
 
             statement.executeUpdate();
-        }
-    }
+            Set<UUID> players = zonePlayers.get(zoneName);
 
-    public Set<UUID> getPlayers(String zoneName) throws SQLException {
-        Set<UUID> players = new HashSet<>();
-
-        String sql = "SELECT uuid FROM zone_players WHERE zone = ?";
-
-        try (Connection connection = DriverManager.getConnection(resolve);
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, zoneName);
-
-            try (ResultSet results = statement.executeQuery()) {
-                while (results.next()) {
-                    UUID playerUuid =  UUID.fromString(results.getString("uuid"));
-                    players.add(playerUuid);
-                }
+            if (players != null) {
+                players.remove(playerUuid);
             }
         }
-
-        return players;
     }
 
-    public void debug(CommandSender sender) throws SQLException {
-        String sql = "SELECT zone, uuid FROM zone_players ORDER BY zone, uuid";
+    public boolean getPlayer(String zoneName, Player player) {
 
-        try (Connection connection = DriverManager.getConnection(resolve);
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet results = statement.executeQuery()) {
+        Set<UUID> players = zonePlayers.get(zoneName);
 
-            sender.sendMessage("[SQLite DEBUG] Table: zone_players");
+        return players != null && players.contains(player.getUniqueId());
+    }
 
-            boolean empty = true;
+    private void loadCache() throws SQLException {
+        String sql = "SELECT zone, uuid FROM zone_players";
 
+        zonePlayers.clear();
+
+        try (Connection connection = DriverManager.getConnection(resolve); PreparedStatement statement = connection.prepareStatement(sql); ResultSet results = statement.executeQuery()) {
             while (results.next()) {
-                empty = false;
+                String zone = results.getString("zone");
+                UUID uuid = UUID.fromString(results.getString("uuid"));
 
-                sender.sendMessage(
-                        "[SQLite DEBUG] Zone: " + results.getString("zone")
-                                + " | UUID: " + results.getString("uuid")
-                );
+                zonePlayers.computeIfAbsent(zone, key -> new HashSet<>()).add(uuid);
             }
-
-            if (empty) {
-                sender.sendMessage("[SQLite DEBUG] The table is empty.");
-            }
-
-            sender.sendMessage("[SQLite DEBUG] End.");
         }
+
     }
 }

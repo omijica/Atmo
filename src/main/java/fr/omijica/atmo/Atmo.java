@@ -37,10 +37,14 @@ public final class Atmo extends JavaPlugin {
                 Files.createDirectories(ambientFolder);
             } catch (IOException e) {
                 getLogger().severe("Unable to create the folder: " + e.getMessage());
+                getServer().getPluginManager().disablePlugin(this);
+                return;
             }
 
-            new ConvertAmbient().convert(getDataFolder());
-            getLogger().info("The plugin has converted the ‘ambient’ files to the new format. (1.0.1)");
+            if (Files.isRegularFile(getDataFolder().toPath().resolve("ambient.yml"))) {
+                new ConvertAmbient().convert(getDataFolder());
+                getLogger().info("The plugin has converted ambient.yml to profiles in ambient/.");
+            }
 
         }
 
@@ -127,6 +131,13 @@ public final class Atmo extends JavaPlugin {
             if (!file.exists()) {
                 saveResource(fileName, false);
             }
+        }
+
+        // L'exemple n'est installé qu'en l'absence de profils, y compris après une migration.
+        File ambientFolder = new File(getDataFolder(), "ambient");
+        File[] profiles = ambientFolder.listFiles(file -> file.isFile() && file.getName().endsWith(".yml"));
+        if (profiles != null && profiles.length == 0) {
+            saveResource("ambient/ambient.yml", false);
         }
     }
 

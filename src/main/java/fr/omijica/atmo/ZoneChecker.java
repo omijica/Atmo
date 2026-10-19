@@ -1,8 +1,13 @@
 package fr.omijica.atmo;
 
+import org.bukkit.Location;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 /** Maintient les zones en mémoire et détermine laquelle s'applique à la position d'un joueur. */
 public class ZoneChecker {
@@ -32,17 +37,48 @@ public class ZoneChecker {
      * Retient la zone contenant le joueur avec la plus grande priorité numérique.
      * À priorité égale, la première zone chargée reste sélectionnée ; hors zone, renvoie null.
      */
-    public ZoneClass getPlayerZone(org.bukkit.entity.Player player) {
+    public ZoneClass getPlayerZone(org.bukkit.entity.Player player, Atmo plugin) {
         ZoneClass bestZone = null;
+        Location location = player.getLocation();
 
         for (ZoneClass zone : zones) {
-            if (zone.contains(player.getLocation())) {
-                if (bestZone == null || zone.getPriority() > bestZone.getPriority()) {
-                    bestZone = zone;
-                }
+
+            if (!zone.contains(location)) { //si le joueur n'est pas dans la zone
+                continue;
             }
-        }
-        return bestZone;
+
+            if (bestZone != null && zone.getPriority() <= bestZone.getPriority()) { //si la zone en cours à une priorité plus basse que celles d'avant
+                continue;
+            }
+
+            if (zone.getActivationPerPlayer() && !plugin.getDatabase().getPlayer(zone.getName(), player)) { //si activationPerPlayer est True et que le joueur n'est pas dans les autorisations
+                continue;
+            }
+
+            bestZone = zone;
+
+        } return bestZone;
+
+    }
+
+    public ZoneClass getPlayerZoneInfo(org.bukkit.entity.Player player, Atmo plugin) {
+        ZoneClass bestZone = null;
+        Location location = player.getLocation();
+
+        for (ZoneClass zone : zones) {
+
+            if (!zone.contains(location)) { //si le joueur n'est pas dans la zone
+                continue;
+            }
+
+            if (bestZone != null && zone.getPriority() <= bestZone.getPriority()) { //si la zone en cours à une priorité plus basse que celles d'avant
+                continue;
+            }
+
+            bestZone = zone;
+
+        } return bestZone;
+
     }
 
 }

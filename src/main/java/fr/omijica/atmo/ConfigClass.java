@@ -11,7 +11,7 @@ public final class ConfigClass {
 
     private ConfigClass() {}
 
-    /** Activation de l'ambiance et nom du profil correspondant dans ambient.yml. */
+    /** Activation de l'ambiance et nom du profil correspondant dans les fichiers d'ambient/. */
     public record AmbientSettings(
             boolean enabled,
             String name

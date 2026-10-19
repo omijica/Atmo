@@ -26,7 +26,7 @@ Atmo can also trigger sounds based on what is around the player (such as a decor
 
 - **✓** Create cuboid **zones** in-game by selecting two corners, without any dependencies (no WorldGuard needed).
 - **✓** Each zone has a **priority**, a linked **ambient profile** and/or **background music**, editable through `area.yml`.
-- **✓** Ambient profiles (`ambient.yml`) combine a **looping ambient sound** with a set of **random one-off sounds**, each with its own probability, delay range, volume and pitch variation.
+- **✓** Ambient profiles (`ambient/*.yml`) combine a **looping ambient sound** with a set of **random one-off sounds**, each with its own probability, delay range, volume and pitch variation.
 - **✓** **Background music per zone**.
 - **✓** A **default/fallback ambience and music** (`config.yml → general_area`) applies to configured worlds when a player is outside any zone.
 - **✓** **Block-bound sounds**: detect a nearby entity (e.g. an Armor Stand identified by CustomModelData) and play a sound as if it came from it.
@@ -49,16 +49,16 @@ Atmo can also trigger sounds based on what is around the player (such as a decor
 
 1. **Download** the Atmo plugin JAR file.
 2. Place the JAR in your server's **plugins** folder.
-3. **Restart** your server; Atmo will generate `area.yml`, `ambient.yml`, `blockSound.yml` and `config.yml` in `plugins/atmo/`.
-4. Edit `ambient.yml` (and `config.yml` for the default ambience) to design your soundscapes, then create zones in-game with `/atmo menu`.
+3. **Restart** your server; Atmo will generate `area.yml`, `blockSound.yml` and `config.yml` in its plugin data folder, plus `ambient/ambient.yml` when the `ambient/` folder contains no profiles.
+4. Edit `ambient/ambient.yml` or add your own `.yml` files directly in `ambient/` (and edit `config.yml` for the default ambience), then create zones in-game with `/atmo menu`.
 
 ### Configuration
 
-Atmo generates four configuration files, each with a specific function:
+Atmo uses three main configuration files and an ambient profiles folder:
 
 - **`config.yml`** — Global player permissions (`AllowPlayerDisableMusic`, `AllowPlayerDisableAmbient`) and the **default ambience/music** applied per-world when a player isn't inside any zone.
 - **`area.yml`** — The **zones file**: world, the two corner positions, priority, and the linked ambient/music settings.
-- **`ambient.yml`** — The **ambient profiles**: a background sound and a list of random sounds, referenced by name from `area.yml` and `config.yml`.
+- **`ambient/*.yml`** — The **ambient profiles**: a background sound and a list of random sounds, referenced by their top-level profile key from `area.yml` and `config.yml`. Each file can contain one or more profiles; names must be unique across files. The example is installed only when no profiles exist. On migration, an existing root-level `ambient.yml` is split into profile files when Atmo first creates `ambient/`.
 - **`blockSound.yml`** — **Entity-bound** and **position-bound** sound triggers.
 
 **`config.yml` – default ambience example**
@@ -98,7 +98,7 @@ areas:
       duration: 300
 ```
 
-**`ambient.yml` – ambient profile example**
+**`ambient/ambient.yml` – ambient profile example**
 ```yaml
 field:
   background_sound: "minecraft:music.menu"

@@ -127,7 +127,7 @@ public class SoundManager implements Listener {
 
     // Gère l'ambiance, la musique et le blockSound d'un joueur selon sa zone
     private void handlePlayer(Player player) {
-        ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player);
+        ZoneClass zone = plugin.getZoneChecker().getPlayerZone(player, plugin);
         UUID uuid = player.getUniqueId();
 
         // Crée l'état au premier passage et lit les volumes persistants avant la première lecture.

@@ -40,29 +40,39 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         this.generalConfigData = ConfigClass.loadBaseConfig(plugin.getDataFolder());
     }
 
-    /** Vérifie l'accès du joueur, puis traite la sous-commande demandée. */
+    /** Traite les commandes communes avant celles qui nécessitent un joueur. */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
-            return true;
-        }
-
         // La permission d'administration donne accès à toutes les sous-commandes.
-        if (!player.hasPermission("atmo.admin")) {
-            if (!player.hasPermission("atmo.use")) {
-                MessageUtils.sendError(player, "You do not have permission to use this command.");
-                return true;
-            }
+        if (!sender.hasPermission("atmo.admin") && !sender.hasPermission("atmo.use")) {
+            sendCommandError(sender, "You do not have permission to use this command.");
+            return true;
         }
 
         if (args.length == 0) {
-            sendUsage(player);
+            sendUsage(sender);
             return true;
         }
 
-        String arg1 = args[0].toLowerCase();
+        String arg1 = args[0].toLowerCase(Locale.ROOT);
+
+        switch (arg1) {
+            case "reload":
+                reload(sender);
+                return true;
+            case "enable":
+                setZoneActivation(sender, args, true);
+                return true;
+            case "disable":
+                setZoneActivation(sender, args, false);
+                return true;
+        }
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Only players can use this subcommand. Console commands: atmo reload, atmo enable <player> <zone>, atmo disable <player> <zone>.");
+            return true;
+        }
 
         switch (arg1) {
 
@@ -105,29 +115,13 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                         return true;
                     }
                 }
-                ZoneClass zone = zoneChecker.getPlayerZone(player);
+                ZoneClass zone = zoneChecker.getPlayerZoneInfo(player, plugin);
                 if (zone == null) {
                     MessageUtils.sendError(player, "You are not in any zone.");
                 }
                 else {
                     MessageUtils.sendInfo(player, "You are in the area: <white>" + zone.getName() + " <gray>(Depending on the priority)");
                 }
-                break;
-
-            case "reload":
-                if (!player.hasPermission("atmo.admin")) {
-                    if (!player.hasPermission("atmo.reload")) {
-                        MessageUtils.sendError(player, "You do not have permission to use this command.");
-                        return true;
-                    }
-                }
-                // Recharge les différentes vues de la configuration pour aligner commandes et sons.
-                zoneChecker.setZones(ZoneConfig.load(plugin.getDataFolder()));
-                plugin.getSoundManager().reload();
-                this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
-                this.positionSounds = blockSoundData.positions();
-                this.generalConfigData = ConfigClass.loadBaseConfig(plugin.getDataFolder());
-                MessageUtils.sendSuccess(player, "Atmo configuration and zones reloaded successfully!");
                 break;
 
             case "addloc":
@@ -291,66 +285,6 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 MessageUtils.sendSuccess(player, "Volume for " + volumeType + " set to " + volume + "%.");
                 break;
 
-            case "enable": {
-                if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.enable") ){
-                    MessageUtils.sendError(player, "You do not have permission to use this command.");
-                    return true;
-                }
-
-                if (args.length < 2) {
-                    MessageUtils.sendError(player, "Usage: /atmo enable <player> <zone>");
-                    return true;
-                }
-
-                Player target = Bukkit.getPlayerExact(args[1]);
-
-                if (target == null) {
-                    MessageUtils.sendError(player, "Player not found or offline.");
-                    return true;
-                }
-
-                try {
-                    plugin.getDatabase().addPlayer(args[2], target.getUniqueId());
-                    plugin.getDatabase().debug(player);
-                } catch (SQLException exception) {
-                    plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
-                    return true;
-                }
-
-                MessageUtils.sendSuccess(player, "Zone enabled for" + target + ".");
-                break;
-            }
-
-            case "disable": {
-                if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.disable")) {
-                    MessageUtils.sendError(player, "You do not have permission to use this command.");
-                    return true;
-                }
-
-                if (args.length < 2) {
-                    MessageUtils.sendError(player, "Usage: /atmo disable <player> <zone>");
-                    return true;
-                }
-
-                Player target = Bukkit.getPlayerExact(args[1]);
-
-                if (target == null) {
-                    MessageUtils.sendError(player, "Player not found or offline.");
-                    return true;
-                }
-
-                try {
-                    plugin.getDatabase().removePlayer(args[2], target.getUniqueId());
-                    plugin.getDatabase().debug(player);
-                } catch (SQLException exception) {
-                    plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
-                    return true;
-                }
-
-                MessageUtils.sendSuccess(player, "Zone disabled for" + target + ".");
-                break;
-            }
-
             default:
                 sendUsage(player);
                 break;
@@ -359,32 +293,114 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         return true;
     }
 
+    private void reload(CommandSender sender) {
+        if (!sender.hasPermission("atmo.admin") && !sender.hasPermission("atmo.reload")) {
+            sendCommandError(sender, "You do not have permission to use this command.");
+            return;
+        }
+
+        // Recharge les différentes vues de la configuration pour aligner commandes et sons.
+        zoneChecker.setZones(ZoneConfig.load(plugin.getDataFolder()));
+        plugin.getSoundManager().reload();
+        this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());
+        this.positionSounds = blockSoundData.positions();
+        this.generalConfigData = ConfigClass.loadBaseConfig(plugin.getDataFolder());
+        sendCommandSuccess(sender, "Atmo configuration and zones reloaded successfully!");
+    }
+
+    private void setZoneActivation(CommandSender sender, String[] args, boolean enabled) {
+        String subcommand = enabled ? "enable" : "disable";
+        if (!sender.hasPermission("atmo.admin") && !sender.hasPermission("atmo." + subcommand)) {
+            sendCommandError(sender, "You do not have permission to use this command.");
+            return;
+        }
+
+        if (args.length < 3) {
+            sendCommandError(sender, "Usage: /atmo " + subcommand + " <player> <zone>");
+            return;
+        }
+
+        Player target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) {
+            sendCommandError(sender, "Player not found or offline.");
+            return;
+        }
+
+        ZoneClass zone = zoneChecker.getZoneByName(args[2]);
+        if (zone == null || !zone.getActivationPerPlayer()) {
+            sendCommandError(sender, "Zone not found, or activationPerPlayer is not True.");
+            return;
+        }
+
+        try {
+            if (enabled) {
+                plugin.getDatabase().addPlayer(zone.getName(), target.getUniqueId());
+            } else {
+                plugin.getDatabase().removePlayer(zone.getName(), target.getUniqueId());
+            }
+        } catch (SQLException exception) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to save the player.", exception);
+            sendCommandError(sender, "Failed to save the player.");
+            return;
+        }
+
+        sendCommandSuccess(sender, "Zone " + (enabled ? "enabled" : "disabled") + " for " + target.getName() + ".");
+    }
+
+    private void sendCommandError(CommandSender sender, String message) {
+        if (sender instanceof Player player) {
+            MessageUtils.sendError(player, message);
+        } else {
+            sender.sendMessage("[ATMO] " + message);
+        }
+    }
+
+    private void sendCommandSuccess(CommandSender sender, String message) {
+        if (sender instanceof Player player) {
+            MessageUtils.sendSuccess(player, message);
+        } else {
+            sender.sendMessage("[ATMO] " + message);
+        }
+    }
+
     /** Filtre les suggestions selon le début saisi et les permissions du joueur. */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
 
-        if (!(sender instanceof Player player)) {
-            return Collections.emptyList();
-        }
-
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> subCommands = getAvailableSubCommands(player);
+            List<String> subCommands = getAvailableSubCommands(sender);
             StringUtil.copyPartialMatches(args[0], subCommands, completions);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("addloc")) {
-            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.addloc")) {
+            if (sender instanceof Player && (sender.hasPermission("atmo.admin") || sender.hasPermission("atmo.addloc"))) {
                 List<String> subCommands = new ArrayList<>(positionSounds.keySet());
                 StringUtil.copyPartialMatches(args[1], subCommands, completions);
             }
         } else if (args.length == 2 && args[0].equalsIgnoreCase("volume")) {
-            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
+            if (sender instanceof Player && (sender.hasPermission("atmo.admin") || sender.hasPermission("atmo.volume"))) {
                 StringUtil.copyPartialMatches(args[1], Arrays.asList("music", "ambient", "show"), completions);
             }
         } else if (args.length == 3 && args[0].equalsIgnoreCase("volume")) {
-            if (player.hasPermission("atmo.admin") || player.hasPermission("atmo.volume")) {
+            if (sender instanceof Player && (sender.hasPermission("atmo.admin") || sender.hasPermission("atmo.volume"))) {
                 StringUtil.copyPartialMatches(args[2], Arrays.asList("0", "25", "50", "75", "100"), completions);
+            }
+        } else if ((args.length == 2 || args.length == 3) && (args[0].equalsIgnoreCase("enable") || args[0].equalsIgnoreCase("disable"))) {
+            if (sender.hasPermission("atmo.admin") || sender.hasPermission("atmo." + args[0].toLowerCase(Locale.ROOT))) {
+                List<String> candidates = new ArrayList<>();
+                if (args.length == 2) {
+                    for (Player target : Bukkit.getOnlinePlayers()) {
+                        candidates.add(target.getName());
+                    }
+                } else {
+                    for (ZoneClass zone : zoneChecker.getZones()) {
+                        if (zone.getActivationPerPlayer()) {
+                            candidates.add(zone.getName());
+                        }
+                    }
+                }
+                StringUtil.copyPartialMatches(args[args.length - 1], candidates, completions);
             }
         }
 
@@ -393,8 +409,17 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
     }
 
     /** Liste commune à l'aide et aux suggestions, incluant les autorisations globales pour l'audio. */
-    private List<String> getAvailableSubCommands(Player player) {
+    private List<String> getAvailableSubCommands(CommandSender sender) {
         List<String> subCommands = new ArrayList<>();
+
+        if (!(sender instanceof Player player)) {
+            for (String subcommand : List.of("reload", "enable", "disable")) {
+                if (sender.hasPermission("atmo.admin") || sender.hasPermission("atmo." + subcommand)) {
+                    subCommands.add(subcommand);
+                }
+            }
+            return subCommands;
+        }
 
         boolean isAdmin = player.hasPermission("atmo.admin");
 
@@ -422,12 +447,18 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
         if (isAdmin || player.hasPermission("atmo.volume")) {
             subCommands.add("volume");
         }
+        if (isAdmin || player.hasPermission("atmo.enable")) {
+            subCommands.add("enable");
+        }
+        if (isAdmin || player.hasPermission("atmo.disable")) {
+            subCommands.add("disable");
+        }
 
         return subCommands;
     }
 
     // Sert uniquement à colorer les commandes de gestion dans l'aide ; les permissions sont vérifiées ailleurs.
-    private static final Set<String> ADMIN_SUBCOMMANDS = Set.of("reload", "addloc", "menu", "editor", "info");
+    private static final Set<String> ADMIN_SUBCOMMANDS = Set.of("reload", "addloc", "menu", "editor", "info", "enable", "disable");
 
     private static final Map<String, String> SUBCOMMAND_DESCRIPTIONS = Map.of(
             "menu", "Open the settings menu",
@@ -437,15 +468,24 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
             "addloc", "<name> Adds your position to a BlockSound",
             "music", "Enables or disables background music",
             "ambient", "Enables or disables ambient sounds",
-            "volume", "<music | ambient | show> [0-100] Sets the volume"
+            "volume", "<music | ambient | show> [0-100] Sets the volume",
+            "enable", "<player> <zone> Enables a zone for a player",
+            "disable", "<player> <zone> Disables a zone for a player"
     );
 
-    /** Affiche les commandes accessibles, leur description et une couleur selon leur usage. */
-    private void sendUsage(Player player) {
-        List<String> available = getAvailableSubCommands(player);
+    /** Affiche les commandes accessibles ; les joueurs reçoivent aussi les couleurs et les sons. */
+    private void sendUsage(CommandSender sender) {
+        List<String> available = getAvailableSubCommands(sender);
 
         if (available.isEmpty()) {
-            MessageUtils.sendError(player, "You do not have permission to use any /atmo subcommand.");
+            sendCommandError(sender, "You do not have permission to use any /atmo subcommand.");
+            return;
+        }
+
+        if (!(sender instanceof Player player)) {
+            for (String cmd : available) {
+                sender.sendMessage("atmo " + cmd + " - " + SUBCOMMAND_DESCRIPTIONS.getOrDefault(cmd, ""));
+            }
             return;
         }
 

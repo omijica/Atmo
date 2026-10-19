@@ -70,6 +70,7 @@ public class ZoneClass {
     public boolean getMusicEnabled() { return musicEnabled;}
     public int getMusicVolume() { return musicVolume; }
     public int getMusicDuration() {return musicDuration;}
+    public boolean getActivationPerPlayer() {return  activationPerPlayer;}
 
 
     /**
