@@ -196,7 +196,7 @@ public class SoundManager implements Listener {
                 // Le volume final combine celui du profil et le pourcentage personnel du joueur.
                 float backgroundVolume = (float) data.backgroundVolume() * (state.ambientVolume / 100f);
                 try {
-                    player.playSound(player.getLocation(), data.backgroundSound(), AMBIENT_CATEGORY, backgroundVolume, 1.0f);
+                    player.playSound(player, data.backgroundSound(), AMBIENT_CATEGORY, backgroundVolume, 1.0f);
                 } catch (IllegalArgumentException e) {
                     // concatène la vraie clé du son de fond dans le message d'erreur.
                     Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + data.backgroundSound() + "' in configuration.");
@@ -270,7 +270,7 @@ public class SoundManager implements Listener {
         if (state.musicCooldown <= 0) {
             float volume = (getMusicVolumeEffective(zone) / 100f) * (state.musicVolume / 100f);
             try {
-                player.playSound(player.getLocation(), musicName, SoundCategory.RECORDS, volume, 1.0f);
+                player.playSound(player, musicName, SoundCategory.RECORDS, volume, 1.0f);
             } catch (IllegalArgumentException e) {
                 // affiche le nom réel de la musique invalide.
                 Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + musicName + "' in configuration.");
