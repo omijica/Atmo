@@ -121,8 +121,9 @@ public class SoundManager implements Listener {
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerMusicState state = states.get(player.getUniqueId());
             stopAll(player, state);
-            states.clear();
         }
+        // vide les états après avoir arrêté les sons de tous les joueurs, et non après le premier.
+        states.clear();
     }
 
     // Gère l'ambiance, la musique et le blockSound d'un joueur selon sa zone
@@ -197,7 +198,8 @@ public class SoundManager implements Listener {
                 try {
                     player.playSound(player.getLocation(), data.backgroundSound(), AMBIENT_CATEGORY, backgroundVolume, 1.0f);
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.backgroundSound() + \"' in configuration.");
+                    // concatène la vraie clé du son de fond dans le message d'erreur.
+                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + data.backgroundSound() + "' in configuration.");
                 }
 
                 state.playingSound = data.backgroundSound();
@@ -219,7 +221,8 @@ public class SoundManager implements Listener {
                         try {
                             player.playSound(soundLocation, sound.sound(), AMBIENT_CATEGORY, volume, pitch);
                         } catch (IllegalArgumentException e) {
-                            Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + sound.sound() + \"' in configuration.");
+                            // affiche la clé du son aléatoire concerné, au lieu du texte de l'expression Java.
+                            Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + sound.sound() + "' in configuration.");
                         }
 
                         state.playingRandomSounds.add(sound.sound()); // on retient ce son pour pouvoir le couper
@@ -269,7 +272,8 @@ public class SoundManager implements Listener {
             try {
                 player.playSound(player.getLocation(), musicName, SoundCategory.RECORDS, volume, 1.0f);
             } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + musicName + \"' in configuration.");
+                // affiche le nom réel de la musique invalide.
+                Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + musicName + "' in configuration.");
             }
 
             state.playingMusicSound = musicName;
@@ -329,7 +333,8 @@ public class SoundManager implements Listener {
                 try {
                     player.playSound(matchedLocation, data.sound(), AMBIENT_CATEGORY, volume, pitch); // joué depuis la position, pas depuis le joueur
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.sound() + \"' in configuration.");
+                    // indique la clé du son associé à la position fixe.
+                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + data.sound() + "' in configuration.");
                 }
 
                 state.playingPositionSounds.put(key, data.sound()); // on mémorise le son en cours pour pouvoir le couper
@@ -390,7 +395,8 @@ public class SoundManager implements Listener {
                 try {
                     player.playSound(matchingEntity.getLocation(), data.sound(), AMBIENT_CATEGORY, volume, pitch);
                 } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '\" + data.sound() + \"' in configuration.");
+                    // indique la clé du son associé à l'entité.
+                    Bukkit.getLogger().warning("[Atmo] Invalid sound key '" + data.sound() + "' in configuration.");
                 }
 
                 state.playingEntitySounds.put(key, data.sound());

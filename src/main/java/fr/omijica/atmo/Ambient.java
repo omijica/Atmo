@@ -48,6 +48,11 @@ public final class Ambient {
         File[] files = folder.listFiles(file -> file.isFile() && file.getName().endsWith(".yml"));
         Map<String, AmbientData> ambiances = new HashMap<>();
 
+        // listFiles renvoie null si ambient/ est absent ou illisible ; évite une exception au chargement.
+        if (files == null) {
+            return Map.of();
+        }
+
         for (File file : files) {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 

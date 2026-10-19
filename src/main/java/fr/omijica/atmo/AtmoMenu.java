@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -23,10 +24,38 @@ public class AtmoMenu {
 
     MiniMessage mm = MiniMessage.miniMessage();
 
+    // ce détenteur identifie les vrais menus Atmo ; un titre identique ne suffit plus.
+    static final class MenuHolder implements InventoryHolder {
+        private Inventory inventory;
+        // Correction 1 : conserve le nom exact de la zone sans devoir l'extraire du titre affiché.
+        private final String zoneName;
+
+        private MenuHolder(String zoneName) {
+            this.zoneName = zoneName;
+        }
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+
+        String getZoneName() {
+            return zoneName;
+        }
+    }
+
+    // associe chaque inventaire créé par Atmo à son détenteur et à sa zone éventuelle.
+    private static Inventory createMenuInventory(int size, Component title, String zoneName) {
+        MenuHolder holder = new MenuHolder(zoneName);
+        holder.inventory = Bukkit.createInventory(holder, size, title);
+        return holder.inventory;
+    }
+
     // Ouvre le menu principal pour un joueur.
     public static void openMenu(Player player) {
         Component title = Component.text("Atmo Menu", NamedTextColor.GOLD, TextDecoration.BOLD);
-        Inventory gui = Bukkit.createInventory(null, 27, title);
+        // Correction 1 : le menu principal reçoit lui aussi l'identifiant interne des menus Atmo.
+        Inventory gui = createMenuInventory(27, title, null);
 
         // Remplit l'inventaire avec des vitres grises.
         ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
@@ -69,6 +98,14 @@ public class AtmoMenu {
     public static void openAnvilMenu(Atmo plugin, Player player) {
         new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 
+                // revérifie les permissions au clic, même si elles ont changé après l'ouverture.
+                if (!player.hasPermission("atmo.admin")
+                        && !player.hasPermission("atmo.menu")
+                        && !player.hasPermission("atmo.editor")) {
+                    MessageUtils.sendError(player, "You do not have permission to use this command.");
+                    return List.of(AnvilGUI.ResponseAction.close());
+                }
+
                 // Seul le résultat de l'enclume valide le texte saisi.
                 if (slot != AnvilGUI.Slot.OUTPUT) {
                     return Collections.emptyList();
@@ -76,14 +113,13 @@ public class AtmoMenu {
 
                 String zoneName = stateSnapshot.getText();
 
-                // Valide le nom saisi.
-                if (zoneName == null || zoneName.isBlank() || zoneName.equals("Area Name")) {
-                    MessageUtils.sendError(player, "Please enter a valid zone name.");
+                // refuse les points, car YAML les interprète comme des séparateurs de sous-sections.
+                if (zoneName == null || zoneName.isBlank() || zoneName.equals("Area Name") || zoneName.contains(".")) {
+                    MessageUtils.sendError(player, "Please enter a valid zone name without dots.");
                     return List.of(AnvilGUI.ResponseAction.replaceInputText("Area Name"));
                 }
 
-                // Lance la sélection des coins ; la zone sera enregistrée une fois les deux blocs choisis.
-                MessageUtils.sendSuccess(player, "Zone <white>\"" + zoneName + "\" <green>successfully created!");
+                // lance seulement la sélection ; le succès sera annoncé après l'enregistrement des coins.
                 ZoneListener zListener = plugin.getZoneListener();
                 zListener.enableCreationMode(player, zoneName);
                 return List.of(AnvilGUI.ResponseAction.close());
@@ -115,7 +151,8 @@ public class AtmoMenu {
     // Affiche la liste des zones paginée.
     public void openPaperMenu(Player player, int page) {
         Component title = Component.text("Atmo Menu (AREAS)", NamedTextColor.GOLD, TextDecoration.BOLD);
-        Inventory gui = Bukkit.createInventory(null, 54, title);
+        // la liste des zones utilise le même mécanisme d'identification interne.
+        Inventory gui = createMenuInventory(54, title, null);
 
         /* Bouton Suivant */
         String base64Texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGU0MDNjYzdiYmFjNzM2NzBiZDU0M2Y2YjA5NTViYWU3YjhlOTEyM2Q4M2JkNzYwZjYyMDRjNWFmZDhiZTdlMSJ9fX0=";
@@ -263,7 +300,8 @@ public class AtmoMenu {
     // Ouvre le menu d'édition pour une zone spécifique.
     public void openZoneEditMenu(Player player, String name) {
         Component title = Component.text("Atmo - " + name + " Settings", NamedTextColor.GOLD, TextDecoration.BOLD);
-        Inventory gui = Bukkit.createInventory(null, 27, title);
+        // rattache les réglages au nom exact de la zone, indépendamment du texte du titre.
+        Inventory gui = createMenuInventory(27, title, name);
 
         // Remplit l'inventaire avec des vitres grises.
         ItemStack glassFiller = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);

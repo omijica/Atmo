@@ -1,7 +1,6 @@
 package fr.omijica.atmo;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.Listener;
@@ -9,6 +8,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -24,11 +24,29 @@ public class MenuListener implements Listener {
         this.plugin = plugin;
     }
 
-    /** Identifie le menu par son titre et réserve les clics à ses boutons. */
+    /** Vérifie l'identité du menu et les permissions avant de traiter ses boutons. */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
 
         if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+
+        // ignore tout inventaire qui ne possède pas le détenteur réservé aux menus Atmo.
+        Inventory inventory = event.getView().getTopInventory();
+        if (!(inventory.getHolder() instanceof AtmoMenu.MenuHolder holder)) {
+            return;
+        }
+
+        event.setCancelled(true);
+        // seuls les clics dans le menu du haut peuvent déclencher ses boutons.
+        if (event.getRawSlot() < 0 || event.getRawSlot() >= inventory.getSize()) {
+            return;
+        }
+
+        // bloque les actions du menu si le joueur n'a plus l'autorisation de le gérer.
+        if (!player.hasPermission("atmo.admin") && !player.hasPermission("atmo.menu")) {
+            MessageUtils.sendError(player, "You do not have permission to use this command.");
             return;
         }
 
@@ -81,7 +99,8 @@ public class MenuListener implements Listener {
             ItemStack item = event.getCurrentItem();
 
             int slot = event.getRawSlot();
-            String zoneName = title.replace("Atmo - ", "").replace(" Settings", "");
+            // récupère la zone depuis le détenteur, sans découper un titre pouvant contenir le nom.
+            String zoneName = holder.getZoneName();
             ZoneClass zone = plugin.getZoneChecker().getZoneByName(zoneName);
 
             if (zone == null) {

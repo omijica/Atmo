@@ -24,7 +24,7 @@ import static fr.omijica.atmo.MessageUtils.playSound;
 /** Exécute les sous-commandes /atmo et propose une autocomplétion adaptée aux permissions. */
 public class AtmoCommand implements CommandExecutor, TabExecutor {
 
-    private final Map<UUID, ZoneCreationSession> activeSessions = new HashMap<>();
+    // Correction 2 : les sessions d'édition sont conservées uniquement dans ZoneListener, sans seconde collection ici.
     private final Atmo plugin;
     private final ZoneChecker zoneChecker;
     private Map<String, BlockSoundClass.PositionEntry> positionSounds;
@@ -88,24 +88,20 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                 break;
 
             case "editor":
+                // annule la vraie session avant d'ouvrir une nouvelle saisie de nom.
+                // Un joueur ayant lancé l'édition depuis le menu peut aussi quitter sans la permission atmo.editor.
+                if (plugin.getZoneListener().disableCreationMode(player)) {
+                    MessageUtils.sendInfo(player, "You have exited edit mode.");
+                    break;
+                }
                 if (!player.hasPermission("atmo.admin")) {
                     if (!player.hasPermission("atmo.editor")) {
                         MessageUtils.sendError(player, "You do not have permission to use this command.");
                         return true;
                     }
                 }
-                UUID uuid = player.getUniqueId();
-
-                // Cette collection appartient à la commande ; les sélections de blocs sont
-                // conservées séparément par ZoneListener.
-                if (activeSessions.containsKey(uuid)) {
-                    activeSessions.remove(player.getUniqueId());
-                    MessageUtils.sendInfo(player, "You have exited edit mode.");
-                }
-                else {
-                    AtmoMenu.openAnvilMenu(plugin, player);
-                    MessageUtils.playClick(player);
-                }
+                AtmoMenu.openAnvilMenu(plugin, player);
+                MessageUtils.playClick(player);
                 break;
 
             case "info":
@@ -167,6 +163,9 @@ public class AtmoCommand implements CommandExecutor, TabExecutor {
                     } catch (IOException e) {
                         plugin.getLogger().severe("Unable to save the location to blockSound.yml!");
                         e.printStackTrace();
+                        // Correction 4 : un échec d'écriture interrompt la commande avant le rechargement et le message de succès.
+                        MessageUtils.sendError(player, "Unable to save the location.");
+                        return true;
                     }
 
                     this.blockSoundData = BlockSoundClass.load(plugin.getDataFolder());

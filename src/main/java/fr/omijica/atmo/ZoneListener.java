@@ -30,6 +30,11 @@ public class ZoneListener implements Listener {
         this.zoneChecker = zoneChecker;
     }
 
+    /** permet à /atmo editor d'annuler la session réellement conservée par ce listener. */
+    public boolean disableCreationMode(Player player) {
+        return activeSessions.remove(player.getUniqueId()) != null;
+    }
+
     /** Commence une nouvelle sélection, y compris pour redéfinir les limites d'une zone existante. */
     public void enableCreationMode(Player player, String zoneName) {
         activeSessions.put(player.getUniqueId(), new ZoneCreationSession(zoneName));
@@ -76,7 +81,11 @@ public class ZoneListener implements Listener {
             }
 
 
-            saveZoneToYml(session);
+            // conserve la sélection et signale l'erreur si la zone n'a pas pu être enregistrée.
+            if (!saveZoneToYml(session)) {
+                MessageUtils.sendError(player, "Unable to save the zone. Your selection has been kept; try again.");
+                return;
+            }
             activeSessions.remove(player.getUniqueId());
             MessageUtils.sendSuccess(player, "Area <white>" + session.getZoneName() + " <green>successfully saved!");
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
@@ -87,8 +96,8 @@ public class ZoneListener implements Listener {
         return loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
     }
 
-    /** Met à jour les coordonnées dans area.yml et recharge la liste des zones en mémoire. */
-    private void saveZoneToYml(ZoneCreationSession session) {
+    /**  renvoie un résultat pour ne fermer la session qu'après une sauvegarde réussie. */
+    private boolean saveZoneToYml(ZoneCreationSession session) {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
         }
@@ -100,7 +109,8 @@ public class ZoneListener implements Listener {
             } catch (IOException e) {
                 plugin.getLogger().severe("Unable to create the area.yml file!");
                 e.printStackTrace();
-                return;
+                // propage l'échec de création du fichier à la méthode qui gère la sélection.
+                return false;
             }
         }
 
@@ -152,9 +162,13 @@ public class ZoneListener implements Listener {
         } catch (IOException e) {
             plugin.getLogger().severe("Unable to save the zone to area.yml!");
             e.printStackTrace();
+            // empêche d'annoncer un succès ou de recharger les zones après un échec d'écriture.
+            return false;
         }
 
         zoneChecker.setZones(ZoneConfig.load(plugin.getDataFolder()));
+        // confirme la réussite seulement après l'écriture du fichier et le rechargement des zones.
+        return true;
     }
 
     /** Libère la sélection inachevée lorsque le joueur quitte le serveur. */

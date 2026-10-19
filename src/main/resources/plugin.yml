@@ -9,6 +9,6 @@ softdepend: [ItemsAdder]
 commands:
   atmo:
     description: Main command of Atmo Plugin.
-    permission: atmo.use
+    permission: atmo.use;atmo.admin
     usage: /atmo <menu|editor|info|reload|addloc|music|ambient|volume>
     aliases: []
